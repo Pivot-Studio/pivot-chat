@@ -14,6 +14,7 @@ spec:
     spec:
       containers:
         - image: registry.cn-hangzhou.aliyuncs.com/pivot_studio/pivot-chat:latest
+          imagePullPolicy: Always
           name: chat
           ports:
             - containerPort: 8080
