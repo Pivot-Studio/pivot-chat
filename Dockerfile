@@ -1,5 +1,5 @@
 #build stage
-FROM golang:alpine AS builder
+FROM golang:latest AS builder
 ENV GOPROXY=https://goproxy.cn,direct
 ENV GO111MODULE=on
 RUN set -eux && sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
