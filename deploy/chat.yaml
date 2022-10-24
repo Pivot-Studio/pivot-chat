@@ -13,7 +13,7 @@ spec:
         app: chat
     spec:
       containers:
-        - image: registry.cn-hangzhou.aliyuncs.com/pivot_studio/pivot-chat:{{.build_tag}}
+        - image: registry.cn-hangzhou.aliyuncs.com/pivot_studio/pivot-chat:latest
           name: chat
           ports:
             - containerPort: 8080
