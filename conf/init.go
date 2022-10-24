@@ -26,7 +26,7 @@ type Config struct {
 		Password string
 	}
 }
-var K8SConfig = "etc/chat/config.json"
+var K8SConfig = "/etc/chat/config.json"
 
 func init() {
 	C = &Config{}
