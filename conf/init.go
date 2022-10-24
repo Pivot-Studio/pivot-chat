@@ -2,9 +2,8 @@ package conf
 
 import (
 	"encoding/json"
-	"io/ioutil"
-
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
 )
 
 var C *Config
