@@ -1,16 +1,19 @@
 #build stage
-FROM golang:latest AS builder
-ENV GOPROXY=https://goproxy.cn,direct
-ENV GO111MODULE=on
+FROM golang:alpine AS builder
 RUN set -eux && sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
-RUN apk -u --no-cache add git
+RUN apk update
+RUN apk add --no-cache git
+RUN apk --no-cache add ca-certificates
 WORKDIR /go/src/app
 COPY . .
+RUN go env -w GO111MODULE=on
+RUN go env -w GOPROXY=https://goproxy.cn,direct
+RUN go get -d -v ./...
+RUN apk add build-base 
 RUN go build -o /go/bin/app -v main.go
 
 #final stage
 FROM alpine:latest
-RUN set -eux && sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
 RUN apk --no-cache add ca-certificates
 COPY --from=builder /go/bin/app /chat/app
 WORKDIR /chat
