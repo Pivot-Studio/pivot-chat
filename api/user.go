@@ -55,7 +55,7 @@ func chgPwd(ctx *gin.Context) {
 
 func Register(ctx *gin.Context) {
 	p := &registerParam{}
-	err := ctx.ShouldBind(p) //格式不符合要求出错
+	err := ctx.ShouldBind(p)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"msg": "[Register]:" + err.Error(),
@@ -63,15 +63,7 @@ func Register(ctx *gin.Context) {
 		return
 	}
 
-	err = service.InviteCheck(p.InviteCode) //邀请码检查
-	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "[Register]:" + err.Error(),
-		})
-		return
-	}
-
-	passwordHash, err := util.EncodePassword(p.Password) //密码出错
+	passwordHash, err := util.EncodePassword(p.Password)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"msg": "[Register]:" + err.Error(),

@@ -2,8 +2,9 @@ package conf
 
 import (
 	"encoding/json"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
+
+	"github.com/sirupsen/logrus"
 )
 
 var C *Config
@@ -19,12 +20,12 @@ type Config struct {
 		Host     string
 		Password string
 	}
-	// EmailServer struct {
-	// 	Email    string
-	// 	Port     int
-	// 	Host     string
-	// 	Password string
-	// }
+	EmailServer struct {
+		Email    string
+		Port     int
+		Host     string
+		Password string
+	}
 	TokenSecret string
 }
 
