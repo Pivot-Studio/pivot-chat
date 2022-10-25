@@ -1,19 +1,29 @@
 package service
 
-import "sync"
+import (
+	"errors"
+	"sync"
+)
 
-var ConnsManager = sync.Map{}
+var ConnsManager = sync.Map{} // (userID, conn)
 
-func SendToUser()
+func SendToUser(userID int64, data []byte) error {
+	conn := GetConn(userID)
+	if conn == nil {
+		return errors.New("[Service] | conn-manager get connection err")
+	}
+	err := conn.Send(data)
+	return err
+}
 
 // SetConn 存储
-func SetConn(deviceId int64, conn *Conn) {
-	ConnsManager.Store(deviceId, conn)
+func SetConn(userID int64, conn *Conn) {
+	ConnsManager.Store(userID, conn)
 }
 
 // GetConn 获取
-func GetConn(deviceId int64) *Conn {
-	value, ok := ConnsManager.Load(deviceId)
+func GetConn(userID int64) *Conn {
+	value, ok := ConnsManager.Load(userID)
 	if ok {
 		return value.(*Conn)
 	}
@@ -21,6 +31,6 @@ func GetConn(deviceId int64) *Conn {
 }
 
 // DeleteConn 删除
-func DeleteConn(deviceId int64) {
-	ConnsManager.Delete(deviceId)
+func DeleteConn(userID int64) {
+	ConnsManager.Delete(userID)
 }

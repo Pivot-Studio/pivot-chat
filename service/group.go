@@ -1,31 +1,19 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/Pivot-Studio/pivot-chat/constant"
+	"github.com/Pivot-Studio/pivot-chat/dao"
+	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/sirupsen/logrus"
 )
 
 // Group 群组
 type Group struct {
-	Id           int64       `gorm:"primarykey"` // 群组id
-	Name         string      // 组名
-	Introduction string      // 群简介
-	UserNum      int32       // 群组人数
-	CreateTime   time.Time   // 创建时间
-	UpdateTime   time.Time   // 更新时间
-	Members      []GroupUser `gorm:"-"` // 群组成员
-}
-
-type GroupUser struct {
-	Id         int64     `gorm:"primarykey"` // 自增主键
-	UserId     int64     // 用户id
-	MemberType int       // 用户在当前群组的role
-	Status     int       // 状态
-	CreateTime time.Time // 创建时间
-	UpdateTime time.Time // 更新时间
+	*model.Group
 }
 
 type SendInfo struct {
@@ -36,6 +24,8 @@ type SendInfo struct {
 
 const (
 	SenderType_USER = 1
+	ReceiverType_USER = 2
+	ReceiverType_GROUP = 3
 )
 
 func (g *Group) IsMember(userId int64) bool {
@@ -59,13 +49,44 @@ func (g *Group) SendMessgae(sendInfo SendInfo) error {
 				fmt.Println("Recovered. Error:\n", r)
 			}
 		}()
+		bytes, err := json.Marshal(sendInfo.Messgae)
+		if err != nil {
+			logrus.Fatalf("[Service] | conn-manager json Marshal err:", err)
+			return
+		}
+		// 持久化
+		meg := model.Message{
+			SenderType:   sendInfo.SenderType,
+			SenderId:     sendInfo.UserId,
+			ReceiverType: ReceiverType_GROUP,
+			ReceiverId:   g.GroupId,
+			Content:      bytes,
+			Seq:          g.MaxSeq + 1,
+			SendTime:     time.Now(),
+		}
+		err = dao.RS.CreateMessage([]*model.Message{&meg})
+		if err != nil {
+			logrus.Fatalf("[Service] | conn-manager persist CreateMessage err:", err)
+			return
+		}
+		// 持久化消息成功 update group
+		err = dao.RS.IncrGroupSeq(g.GroupId)
+		if err != nil {
+			logrus.Fatalf("[Service] | conn-manager persist IncrGroupSeq err:", err)
+			return
+		}
 		// 将消息发送给群组用户
 		for _, user := range g.Members {
 			// 前面已经发送过，这里不需要再发送
 			if sendInfo.SenderType == SenderType_USER && user.UserId == sendInfo.UserId {
 				continue
 			}
-			// TODO:发送消息
+			
+			err = SendToUser(sendInfo.UserId, bytes)
+			if err != nil {
+				logrus.Fatalf("[Service] | group sendmeg error:", err)
+				continue
+			}
 		}
 	}()
 	return nil
