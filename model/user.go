@@ -6,12 +6,12 @@ import (
 )
 
 type User struct {
-	UserId    int64 `gorm:"primarykey"`
-	UserName  string
-	Password  string
-	Email     string
+	UserId         int64 `gorm:"primarykey"`
+	UserName       string
+	Password       string
+	Email          string
 	InvitationCode string
-	CreateAt  time.Time
-	DeleteAt  sql.NullTime
-	UpdateAt  time.Time
+	CreateAt       time.Time
+	DeleteAt       sql.NullTime
+	UpdateAt       time.Time
 }

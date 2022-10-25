@@ -17,19 +17,12 @@ func Register(ctx *gin.Context, user *model.User, captcha string) (err error) {
 		return constant.CaptchaErr
 	}
 
-
 	err = dao.RS.CreateUser([]*model.User{user})
 	if err != nil {
 		return err
 	}
 	return nil
 }
-func ChgPwd(ctx *gin.Context,userName string,oldPwd string,newPwd string) (err error) {
-
-	err = dao.RS.ChangeUserPwd(&model.User{UserName: userName}, oldPwd, newPwd)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func ChgPwd(ctx *gin.Context, userName string, oldPwd string, newPwd string) error {
+	return dao.RS.ChangeUserPwd(&model.User{UserName: userName}, oldPwd, newPwd)
 }

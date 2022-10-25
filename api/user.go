@@ -14,16 +14,17 @@ type registerParam struct {
 	UserName string `form:"username" binding:"required"`
 	Password string `form:"password" binding:"required"`
 	Email    string `form:"email" binding:"required"`
-	Captcha   string `form:"captcha" binding:"required"`
+	Captcha  string `form:"captcha" binding:"required"`
 }
 type chgPwdParam struct {
-	OldPwd string `form:"oldpwd" binding:"required"`
-	NewPwd string `form:"newpwd" binding:"required"`
+	OldPwd   string `form:"oldpwd" binding:"required"`
+	NewPwd   string `form:"newpwd" binding:"required"`
 	UserName string `form:"username" binding:"required"`
 }
-func chgPwd(ctx *gin.Context)  {
-	p:=&chgPwdParam{}
-	err:=ctx.ShouldBind(p)
+
+func ChgPwd(ctx *gin.Context) {
+	p := &chgPwdParam{}
+	err := ctx.ShouldBind(p)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"msg": "[chgPwd]:" + err.Error(),
@@ -45,8 +46,7 @@ func chgPwd(ctx *gin.Context)  {
 		return
 	}
 
-
-	err = service.ChgPwd(ctx,p.UserName,oldPwdHash,newPwdHash)
+	err = service.ChgPwd(ctx, p.UserName, oldPwdHash, newPwdHash)
 
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -55,7 +55,7 @@ func chgPwd(ctx *gin.Context)  {
 		return
 	}
 	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
-		"chgPwd": "修改密码成功",
+		"meg": "修改密码成功",
 	})
 }
 
@@ -76,11 +76,11 @@ func Register(ctx *gin.Context) {
 		return
 	}
 	err = service.Register(ctx, &model.User{
-		Password:  passwordHash,
-		Email:     p.Email,
-		UserName:  p.UserName,
-		CreateAt:  time.Now(),
-		UpdateAt:  time.Now(),
+		Password: passwordHash,
+		Email:    p.Email,
+		UserName: p.UserName,
+		CreateAt: time.Now(),
+		UpdateAt: time.Now(),
 	}, p.Captcha)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
