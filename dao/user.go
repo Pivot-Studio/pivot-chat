@@ -2,13 +2,13 @@ package dao
 
 import (
 	"errors"
+
 	"github.com/Pivot-Studio/pivot-chat/model"
 )
 
 func (rs *RdbService) CreateUser(user []*model.User) error {
 	return rs.tx.Create(&user).Error
 }
-
 
 func (rs *RdbService) UpdateUser(user *model.User) (err error) {
 	err = rs.tx.Save(&user).Error
@@ -33,7 +33,7 @@ func (rs *RdbService) GetUserbyUsername(user *model.User) (err error) {
 	return nil
 }
 
-func (rs *RdbService) ChangeUserPwd(user *model.User,oldPwd string,newPwd string)(err error) {
+func (rs *RdbService) ChangeUserPwd(user *model.User, oldPwd string, newPwd string) (err error) {
 
 	err = rs.GetUserbyUsername(user)
 	if err != nil {
@@ -44,8 +44,7 @@ func (rs *RdbService) ChangeUserPwd(user *model.User,oldPwd string,newPwd string
 		return errors.New("the password is wrong please try again")
 	}
 
-	user.Password=newPwd
-
+	user.Password = newPwd
 
 	err = rs.UpdateUser(user)
 
@@ -56,11 +55,9 @@ func (rs *RdbService) ChangeUserPwd(user *model.User,oldPwd string,newPwd string
 	return nil
 }
 
-func (rs *RdbService) ChangeUserName(user *model.User,newUserName string)(err error) {
+func (rs *RdbService) ChangeUserName(user *model.User, newUserName string) (err error) {
 
-
-	user.UserName=newUserName
-
+	user.UserName = newUserName
 
 	err = rs.UpdateUser(user)
 

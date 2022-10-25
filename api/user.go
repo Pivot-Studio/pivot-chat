@@ -11,19 +11,21 @@ import (
 )
 
 type registerParam struct {
-	UserName string `form:"username" binding:"required"`
-	Password string `form:"password" binding:"required"`
-	Email    string `form:"email" binding:"required"`
-	Captcha   string `form:"captcha" binding:"required"`
+	UserName   string `form:"username" binding:"required"`
+	Password   string `form:"password" binding:"required"`
+	Email      string `form:"email" binding:"required"`
+	Captcha    string `form:"captcha" binding:"required"`
+	InviteCode string `form:"invitecode" binding:"required"`
 }
 type chgPwdParam struct {
-	oldPwd string `form:"oldpwd" binding:"required"`
-	newPwd string `form:"newpwd" binding:"required"`
+	oldPwd   string `form:"oldpwd" binding:"required"`
+	newPwd   string `form:"newpwd" binding:"required"`
 	UserName string `form:"username" binding:"required"`
 }
-func chgPwd(ctx *gin.Context)  {
-	p:=&chgPwdParam{}
-	err:=ctx.ShouldBind(p)
+
+func chgPwd(ctx *gin.Context) {
+	p := &chgPwdParam{}
+	err := ctx.ShouldBind(p)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"msg": "[chgPwd]:" + err.Error(),
@@ -45,24 +47,31 @@ func chgPwd(ctx *gin.Context)  {
 		return
 	}
 
-	username:=p.UserName
+	username := p.UserName
 
-	err = service.ChgPwd(ctx,username,oldPwdHash,newPwdHash)
-
-
+	err = service.ChgPwd(ctx, username, oldPwdHash, newPwdHash)
 
 }
 
 func Register(ctx *gin.Context) {
 	p := &registerParam{}
-	err := ctx.ShouldBind(p)
+	err := ctx.ShouldBind(p) //格式不符合要求出错
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"msg": "[Register]:" + err.Error(),
 		})
 		return
 	}
-	passwordHash, err := util.EncodePassword(p.Password)
+
+	err = service.InviteCheck(p.InviteCode) //邀请码检查
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "[Register]:" + err.Error(),
+		})
+		return
+	}
+
+	passwordHash, err := util.EncodePassword(p.Password) //密码出错
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"msg": "[Register]:" + err.Error(),
@@ -70,11 +79,11 @@ func Register(ctx *gin.Context) {
 		return
 	}
 	err = service.Register(ctx, &model.User{
-		Password:  passwordHash,
-		Email:     p.Email,
-		UserName:  p.UserName,
-		CreateAt:  time.Now(),
-		UpdateAt:  time.Now(),
+		Password: passwordHash,
+		Email:    p.Email,
+		UserName: p.UserName,
+		CreateAt: time.Now(),
+		UpdateAt: time.Now(),
 	}, p.Captcha)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
