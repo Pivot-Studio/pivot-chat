@@ -9,7 +9,8 @@ func (e *ErrorBase) Error() string {
 }
 
 var (
-	HashErr        = &ErrorBase{"password hash err"}
-	CaptchaErr               = &ErrorBase{"验证码错误"}
-	EmailExistErr            = &ErrorBase{"邮箱已注册"}
+	HashErr           = &ErrorBase{"password hash err"}
+	CaptchaErr        = &ErrorBase{"验证码错误"}
+	EmailExistErr     = &ErrorBase{"邮箱已注册"}
+	UserNotMatchGroup = &ErrorBase{"用户不在群组内"}
 )

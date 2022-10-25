@@ -8,12 +8,12 @@ import (
 )
 
 type Conn struct {
-	WSMutex  sync.Mutex      // WS写锁
-	WS       *websocket.Conn // websocket连接
-	UserId   int64           // 用户ID
+	WSMutex sync.Mutex      // WS写锁
+	WS      *websocket.Conn // websocket连接
+	UserId  int64           // 用户ID
 }
 
-func(c *Conn) Send(bytes []byte) error{
+func (c *Conn) Send(bytes []byte) error {
 	c.WSMutex.Lock()
 	defer c.WSMutex.Unlock()
 

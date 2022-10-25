@@ -14,7 +14,7 @@ type registerParam struct {
 	UserName string `form:"username" binding:"required"`
 	Password string `form:"password" binding:"required"`
 	Email    string `form:"email" binding:"required"`
-	Captcha   string `form:"captcha" binding:"required"`
+	Captcha  string `form:"captcha" binding:"required"`
 }
 
 func Register(ctx *gin.Context) {
@@ -34,11 +34,11 @@ func Register(ctx *gin.Context) {
 		return
 	}
 	err = service.Register(ctx, &model.User{
-		Password:  passwordHash,
-		Email:     p.Email,
-		UserName:  p.UserName,
-		CreateAt:  time.Now(),
-		UpdateAt:  time.Now(),
+		Password: passwordHash,
+		Email:    p.Email,
+		UserName: p.UserName,
+		CreateAt: time.Now(),
+		UpdateAt: time.Now(),
 	}, p.Captcha)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{

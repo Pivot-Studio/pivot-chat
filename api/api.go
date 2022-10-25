@@ -12,7 +12,7 @@ func useRouter(r *gin.Engine) {
 			user.POST("/register", nil)
 		}
 	}
-	r.GET("/ws", wsHandler) 
+	r.GET("/ws", wsHandler)
 }
 
 func init() {
