@@ -1,4 +1,5 @@
 package model
-type Role interface{
+
+type Role interface {
 	GetAuthByGroupID(int) bool
 }

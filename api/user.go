@@ -11,19 +11,18 @@ import (
 )
 
 type registerParam struct {
-	UserName   string `form:"username" binding:"required"`
-	Password   string `form:"password" binding:"required"`
-	Email      string `form:"email" binding:"required"`
-	Captcha    string `form:"captcha" binding:"required"`
-	InviteCode string `form:"invitecode" binding:"required"`
+	UserName string `form:"username" binding:"required"`
+	Password string `form:"password" binding:"required"`
+	Email    string `form:"email" binding:"required"`
+	Captcha  string `form:"captcha" binding:"required"`
 }
 type chgPwdParam struct {
-	oldPwd   string `form:"oldpwd" binding:"required"`
-	newPwd   string `form:"newpwd" binding:"required"`
+	OldPwd   string `form:"oldpwd" binding:"required"`
+	NewPwd   string `form:"newpwd" binding:"required"`
 	UserName string `form:"username" binding:"required"`
 }
 
-func chgPwd(ctx *gin.Context) {
+func ChgPwd(ctx *gin.Context) {
 	p := &chgPwdParam{}
 	err := ctx.ShouldBind(p)
 	if err != nil {
@@ -32,14 +31,14 @@ func chgPwd(ctx *gin.Context) {
 		})
 		return
 	}
-	oldPwdHash, err := util.EncodePassword(p.oldPwd)
+	oldPwdHash, err := util.EncodePassword(p.OldPwd)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"msg": "[chgPwd]:" + err.Error(),
 		})
 		return
 	}
-	newPwdHash, err := util.EncodePassword(p.newPwd)
+	newPwdHash, err := util.EncodePassword(p.NewPwd)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"msg": "[chgPwd]:" + err.Error(),
@@ -47,10 +46,17 @@ func chgPwd(ctx *gin.Context) {
 		return
 	}
 
-	username := p.UserName
+	err = service.ChgPwd(ctx, p.UserName, oldPwdHash, newPwdHash)
 
-	err = service.ChgPwd(ctx, username, oldPwdHash, newPwdHash)
-
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "[chgPwd]:" + err.Error(),
+		})
+		return
+	}
+	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+		"meg": "修改密码成功",
+	})
 }
 
 func Register(ctx *gin.Context) {

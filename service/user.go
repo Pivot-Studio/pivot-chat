@@ -31,15 +31,6 @@ func Register(ctx *gin.Context, user *model.User, captcha string) (err error) {
 	}
 	return nil
 }
-func ChgPwd(ctx *gin.Context, userName string, oldPwd string, newPwd string) (err error) {
-
-	err = dao.RS.ChangeUserPwd(&model.User{UserName: userName}, oldPwd, newPwd)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
 
 //生成验证码
 func CreatCode() (code string) {
@@ -72,8 +63,8 @@ func CaptchaLogic(ctx *gin.Context, code, email string) {
 //比较验证码
 func CaptchaCheck(ctx *gin.Context, input string, email string) bool {
 	code := dao.Cache.Get(ctx, email).String() //对比验证码是否一致
-	if code == input {
-		return true
-	}
-	return false
+	return code == input
+}
+func ChgPwd(ctx *gin.Context, userName string, oldPwd string, newPwd string) error {
+	return dao.RS.ChangeUserPwd(&model.User{UserName: userName}, oldPwd, newPwd)
 }
