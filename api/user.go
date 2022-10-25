@@ -16,6 +16,42 @@ type registerParam struct {
 	Email    string `form:"email" binding:"required"`
 	Captcha   string `form:"captcha" binding:"required"`
 }
+type chgPwdParam struct {
+	OldPwd string `form:"oldpwd" binding:"required"`
+	NewPwd string `form:"newpwd" binding:"required"`
+	UserName string `form:"username" binding:"required"`
+}
+func chgPwd(ctx *gin.Context)  {
+	p:=&chgPwdParam{}
+	err:=ctx.ShouldBind(p)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "[chgPwd]:" + err.Error(),
+		})
+		return
+	}
+	oldPwdHash, err := util.EncodePassword(p.OldPwd)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "[chgPwd]:" + err.Error(),
+		})
+		return
+	}
+	newPwdHash, err := util.EncodePassword(p.NewPwd)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "[chgPwd]:" + err.Error(),
+		})
+		return
+	}
+
+	username:=p.UserName
+
+	err = service.ChgPwd(ctx,username,oldPwdHash,newPwdHash)
+
+
+
+}
 
 func Register(ctx *gin.Context) {
 	p := &registerParam{}
