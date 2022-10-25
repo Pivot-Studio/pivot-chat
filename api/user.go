@@ -16,6 +16,48 @@ type registerParam struct {
 	Email    string `form:"email" binding:"required"`
 	Captcha  string `form:"captcha" binding:"required"`
 }
+type chgPwdParam struct {
+	OldPwd   string `form:"oldpwd" binding:"required"`
+	NewPwd   string `form:"newpwd" binding:"required"`
+	UserName string `form:"username" binding:"required"`
+}
+
+func ChgPwd(ctx *gin.Context) {
+	p := &chgPwdParam{}
+	err := ctx.ShouldBind(p)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "[chgPwd]:" + err.Error(),
+		})
+		return
+	}
+	oldPwdHash, err := util.EncodePassword(p.OldPwd)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "[chgPwd]:" + err.Error(),
+		})
+		return
+	}
+	newPwdHash, err := util.EncodePassword(p.NewPwd)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "[chgPwd]:" + err.Error(),
+		})
+		return
+	}
+
+	err = service.ChgPwd(ctx, p.UserName, oldPwdHash, newPwdHash)
+
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "[chgPwd]:" + err.Error(),
+		})
+		return
+	}
+	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+		"meg": "修改密码成功",
+	})
+}
 
 func Register(ctx *gin.Context) {
 	p := &registerParam{}

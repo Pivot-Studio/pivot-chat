@@ -25,6 +25,7 @@ type Config struct {
 		Host     string
 		Password string
 	}
+	TokenSecret string
 }
 
 var K8SConfig = "/etc/chat/config.json"
@@ -33,7 +34,7 @@ func init() {
 	C = &Config{}
 	data, err := ioutil.ReadFile(K8SConfig)
 	if err != nil {
-		logrus.Fatal("[init] init config error:", err, " path:", K8SConfig)
+		logrus.Fatal("[init] init config error %v", err)
 	}
 	err = json.Unmarshal(data, C)
 	if err != nil {

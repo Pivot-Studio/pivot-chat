@@ -10,6 +10,7 @@ func useRouter(r *gin.Engine) {
 		user := api.Group("/user")
 		{
 			user.POST("/register", nil)
+			user.POST("/chgPwd", ChgPwd)
 		}
 	}
 	r.GET("/ws", wsHandler)
