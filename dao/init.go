@@ -46,6 +46,8 @@ func init() {
 	sqldb.SetMaxOpenConns(10000)
 	sqldb.SetConnMaxLifetime(time.Second * 3)
 	DB.AutoMigrate(model.User{})
+	DB.AutoMigrate(model.Group{})
+	DB.AutoMigrate(model.Message{})
 	logrus.Info("[init] db init")
 }
 func init() {
