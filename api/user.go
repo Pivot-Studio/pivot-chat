@@ -17,8 +17,8 @@ type registerParam struct {
 	Captcha   string `form:"captcha" binding:"required"`
 }
 type chgPwdParam struct {
-	oldPwd string `form:"oldpwd" binding:"required"`
-	newPwd string `form:"newpwd" binding:"required"`
+	OldPwd string `form:"oldpwd" binding:"required"`
+	NewPwd string `form:"newpwd" binding:"required"`
 	UserName string `form:"username" binding:"required"`
 }
 func chgPwd(ctx *gin.Context)  {
@@ -30,14 +30,14 @@ func chgPwd(ctx *gin.Context)  {
 		})
 		return
 	}
-	oldPwdHash, err := util.EncodePassword(p.oldPwd)
+	oldPwdHash, err := util.EncodePassword(p.OldPwd)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"msg": "[chgPwd]:" + err.Error(),
 		})
 		return
 	}
-	newPwdHash, err := util.EncodePassword(p.newPwd)
+	newPwdHash, err := util.EncodePassword(p.NewPwd)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"msg": "[chgPwd]:" + err.Error(),
