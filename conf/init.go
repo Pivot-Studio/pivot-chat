@@ -27,7 +27,7 @@ type Config struct {
 	// }
 	TokenSecret string
 }
-
+var K8SConfig = "/etc/chat/config.json"
 func init() {
 	C = &Config{}
 	data, err := ioutil.ReadFile("config/config.json")

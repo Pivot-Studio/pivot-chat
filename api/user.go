@@ -45,11 +45,15 @@ func chgPwd(ctx *gin.Context)  {
 		return
 	}
 
-	username:=p.UserName
 
-	err = service.ChgPwd(ctx,username,oldPwdHash,newPwdHash)
+	err = service.ChgPwd(ctx,p.UserName,oldPwdHash,newPwdHash)
 
-
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "[chgPwd]:" + err.Error(),
+		})
+		return
+	}
 
 }
 
