@@ -54,7 +54,9 @@ func chgPwd(ctx *gin.Context)  {
 		})
 		return
 	}
-
+	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+		"chgPwd": "修改密码成功",
+	})
 }
 
 func Register(ctx *gin.Context) {
