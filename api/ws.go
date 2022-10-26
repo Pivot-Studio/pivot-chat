@@ -4,9 +4,12 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Pivot-Studio/pivot-chat/service"
 	"net/http"
+	"sync"
 	"time"
+
+	"github.com/Pivot-Studio/pivot-chat/dao"
+	"github.com/Pivot-Studio/pivot-chat/service"
 
 	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/sirupsen/logrus"
@@ -68,30 +71,40 @@ func wsHandler(ctx *gin.Context) {
 		return
 	}
 
-	//登录成功, 升级为websocket
-	c := WsConnContext{
-		AppId:    req.AppId,
-		DeviceId: req.DeviceId,
+	// 登录成功, 升级为websocket
+	conn := service.Conn{
+		WSMutex: sync.Mutex{},
 	}
-	c.Conn, err = upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
+	conn.WS, err = upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		logrus.Errorf("[wsHandler] ws upgrade fail, %+v", err)
+		return
 	}
-
+	// 通过email获取userid
+	user := model.User{}
+	err = dao.RS.GetUserByEmail(&user, req.Email)
+	if err != nil {
+		logrus.Errorf("[wsHandler] GetUserByEmail fail, %+v", err)
+		return
+	}
+	// conn加入map
+	conn.UserId = user.UserId
+	service.SetConn(user.UserId, &conn)
 	//处理连接
 	for {
-		err = c.Conn.SetReadDeadline(time.Now().Add(wsTimeout))
-		_, data, err := c.Conn.ReadMessage()
+		err = conn.WS.SetReadDeadline(time.Now().Add(wsTimeout))
+		_, data, err := conn.WS.ReadMessage()
 		if err != nil {
 			logrus.Errorf("[wsHandler] ReadMessage failed, %+v", err)
+			service.DeleteConn(user.UserId)
 			return
 		}
-		c.HandlePackage(data)
+		HandlePackage(data)
 	}
 }
 
 // HandlePackage 分类型处理数据包
-func (c *WsConnContext) HandlePackage(bytes []byte) {
+func HandlePackage(bytes []byte) {
 	input := Package{}
 	err := json.Unmarshal(bytes, &input)
 	if err != nil {
@@ -109,18 +122,18 @@ func (c *WsConnContext) HandlePackage(bytes []byte) {
 		fmt.Println("SIGN_IN")
 	case PackageType_PT_SYNC:
 		fmt.Println("SYNC")
-		c.Sync(input.Data)
+		Sync(input.Data)
 	case PackageType_PT_HEARTBEAT:
 		fmt.Println("HEARTBEAT")
 	case PackageType_PT_MESSAGE:
 		fmt.Println("MESSAGE")
-		c.Message(input.Data)
+		Message(input.Data)
 	default:
 		logrus.Info("SWITCH OTHER")
 	}
 }
 
-func (c *WsConnContext) Message(data []byte) {
+func Message(data []byte) {
 	meg := model.GroupMessageInput{}
 	err := json.Unmarshal(data, &meg)
 	if err != nil {
@@ -130,7 +143,7 @@ func (c *WsConnContext) Message(data []byte) {
 	HandleGroupMessage(&meg)
 }
 
-func (c *WsConnContext) Sync(data []byte) {
+func Sync(data []byte) {
 	meg := model.GroupMessageSyncInput{}
 	err := json.Unmarshal(data, &meg)
 	if err != nil {
