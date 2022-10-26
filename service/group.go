@@ -56,7 +56,7 @@ func (g *Group) SendMessage(sendInfo SendInfo) error {
 		}
 		// 持久化
 		meg := model.Message{
-			SenderType:   sendInfo.SenderType,
+			SenderType:   int64(sendInfo.SenderType),
 			SenderId:     sendInfo.UserId,
 			ReceiverType: ReceiverType_GROUP,
 			ReceiverId:   g.GroupId,
@@ -100,7 +100,7 @@ func HandleGroupMessage(meg *model.Message) {
 	err := group.SendMessage(SendInfo{
 		UserId:     meg.SenderId,
 		Message:    string(meg.Content),
-		SenderType: meg.SenderType,
+		SenderType: int(meg.SenderType),
 	})
 	if err != nil {
 		logrus.Fatalf("[HandleGroupMessage] SendMessage %+v", err)

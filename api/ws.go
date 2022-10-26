@@ -1,14 +1,16 @@
 package api
 
-import "C"
+//import "C"
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
+
+	"github.com/sirupsen/logrus"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 const (
@@ -18,6 +20,7 @@ const (
 
 type WsConnContext struct {
 	Conn     *websocket.Conn
+	UserId   int64
 	DeviceId int64
 	AppId    int64
 }

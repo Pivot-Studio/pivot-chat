@@ -2,6 +2,7 @@ package dao
 
 import (
 	"errors"
+
 	"github.com/Pivot-Studio/pivot-chat/model"
 )
 
@@ -53,7 +54,6 @@ func (rs *RdbService) ChangeUserPwd(user *model.User, oldPwd string, newPwd stri
 
 	return nil
 }
-
 
 func (rs *RdbService) ChangeUserName(user *model.User, newUserName string) (err error) {
 
