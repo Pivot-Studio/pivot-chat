@@ -68,6 +68,7 @@ func Register(ctx *gin.Context) {
 		})
 		return
 	}
+
 	passwordHash, err := util.EncodePassword(p.Password)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{

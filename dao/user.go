@@ -2,6 +2,7 @@ package dao
 
 import (
 	"errors"
+
 	"github.com/Pivot-Studio/pivot-chat/model"
 )
 
