@@ -14,5 +14,6 @@ func (rs *RdbService) IncrGroupSeq(groupID int64) (err error) {
 }
 
 func (rs *RdbService) GetGroupMember(groupID int64) (members []model.GroupUser, err error) {
-	rs.tx.Table("groups").Where("group_id = ?", groupID).Find(&members)
+	err = rs.tx.Table("groups").Where("group_id = ?", groupID).Find(&members).Error
+	return
 }
