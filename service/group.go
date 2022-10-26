@@ -18,26 +18,26 @@ type Group struct {
 
 type SendInfo struct {
 	UserId     int64  // 用户id
-	Messgae    string // 消息内容
+	Message    string // 消息内容
 	SenderType int    // 发送者身份
 }
 
 const (
-	SenderType_USER = 1
-	ReceiverType_USER = 2
+	SenderType_USER    = 1
+	ReceiverType_USER  = 2
 	ReceiverType_GROUP = 3
 )
 
 func (g *Group) IsMember(userId int64) bool {
-	for i := range g.Members {
-		if g.Members[i].UserId == userId {
+	for i := range *g.Members {
+		if (*g.Members)[i].UserId == userId {
 			return true
 		}
 	}
 	return false
 }
 
-func (g *Group) SendMessgae(sendInfo SendInfo) error {
+func (g *Group) SendMessage(sendInfo SendInfo) error {
 	if sendInfo.SenderType == SenderType_USER && !g.IsMember(sendInfo.UserId) {
 		logrus.Fatalf("[Service] | group sendmeg error: user isn't in group | sendInfo:", sendInfo)
 		return constant.UserNotMatchGroup
@@ -49,7 +49,7 @@ func (g *Group) SendMessgae(sendInfo SendInfo) error {
 				fmt.Println("Recovered. Error:\n", r)
 			}
 		}()
-		bytes, err := json.Marshal(sendInfo.Messgae)
+		bytes, err := json.Marshal(sendInfo.Message)
 		if err != nil {
 			logrus.Fatalf("[Service] | conn-manager json Marshal err:", err)
 			return
@@ -76,12 +76,12 @@ func (g *Group) SendMessgae(sendInfo SendInfo) error {
 			return
 		}
 		// 将消息发送给群组用户
-		for _, user := range g.Members {
+		for _, user := range *g.Members {
 			// 前面已经发送过，这里不需要再发送
 			if sendInfo.SenderType == SenderType_USER && user.UserId == sendInfo.UserId {
 				continue
 			}
-			
+
 			err = SendToUser(sendInfo.UserId, bytes)
 			if err != nil {
 				logrus.Fatalf("[Service] | group sendmeg error:", err)
@@ -90,4 +90,19 @@ func (g *Group) SendMessgae(sendInfo SendInfo) error {
 		}
 	}()
 	return nil
+}
+
+func HandleGroupMessage(meg *model.Message) {
+	if !dao.RS.ExistGroup(meg.ReceiverId) {
+		return
+	}
+	group := GetUpdatedGroup(meg.ReceiverId)
+	err := group.SendMessage(SendInfo{
+		UserId:     meg.SenderId,
+		Message:    string(meg.Content),
+		SenderType: meg.SenderType,
+	})
+	if err != nil {
+		logrus.Fatalf("[HandleGroupMessage] SendMessage %+v", err)
+	}
 }

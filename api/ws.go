@@ -4,12 +4,11 @@ import "C"
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
-
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 )
 
 const (
@@ -17,16 +16,8 @@ const (
 	wsTimeout = 12 * time.Minute
 )
 
-type PackageType int
-type Package struct {
-	//数据包内容, 按需修改
-	Type PackageType
-	Id   int64
-	data []byte
-}
 type WsConnContext struct {
 	Conn     *websocket.Conn
-	UserId   int64
 	DeviceId int64
 	AppId    int64
 }
@@ -38,6 +29,13 @@ const (
 	PackageType_PT_HEARTBEAT PackageType = 3
 	PackageType_PT_MESSAGE   PackageType = 4
 )
+
+type PackageType int
+type Package struct {
+	//数据包内容, 按需修改
+	Type PackageType
+	data []byte
+}
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -91,7 +89,7 @@ func (c *WsConnContext) HandlePackage(bytes []byte) {
 	case PackageType_PT_HEARTBEAT:
 		fmt.Println("HEARTBEAT")
 	case PackageType_PT_MESSAGE:
-		fmt.Println("MESSAGE")
+		c.Message(input.data)
 	default:
 		logrus.Info("SWITCH OTHER")
 	}

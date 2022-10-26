@@ -5,5 +5,3 @@ type Output struct {
 	Code int    `json:"code,omitempty"`
 	Type int    `json:"type,omitempty"`
 }
-
-const ()
