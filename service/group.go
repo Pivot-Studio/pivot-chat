@@ -17,9 +17,10 @@ type Group struct {
 }
 
 type SendInfo struct {
-	UserId     int64  // 用户id
+	ReceiverId     int64  // 用户id
 	Messgae    string // 消息内容
-	SenderType int    // 发送者身份
+	SenderType int64    // 发送者身份，即群聊id
+	SenderId int64    // 发送者id
 }
 
 const (
@@ -28,9 +29,21 @@ const (
 	ReceiverType_GROUP = 3
 )
 
+func (g *Group) GetGroupMember() ([]*model.GroupUser, error) {
+	members, err := dao.RS.GetGroupMember(g.GroupId)
+	if err != nil {
+		return nil, err
+	}
+	membersPointers := make([]*model.GroupUser, 0)
+	for _, member := range members {
+		membersPointers = append(membersPointers, &member)
+	}
+	return membersPointers, nil
+}
+
 func (g *Group) IsMember(userId int64) bool {
-	for i := range g.Members {
-		if g.Members[i].UserId == userId {
+	for _, member := range g.Members {
+		if member.GroupUserId == userId {
 			return true
 		}
 	}
