@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/sirupsen/logrus"
 
 	"github.com/gin-gonic/gin"
@@ -37,7 +38,7 @@ type PackageType int
 type Package struct {
 	//数据包内容, 按需修改
 	Type PackageType
-	data []byte
+	Data []byte
 }
 
 var upgrader = websocket.Upgrader{
@@ -92,8 +93,18 @@ func (c *WsConnContext) HandlePackage(bytes []byte) {
 	case PackageType_PT_HEARTBEAT:
 		fmt.Println("HEARTBEAT")
 	case PackageType_PT_MESSAGE:
-		c.Message(input.data)
+		c.Message(input.Data)
 	default:
 		logrus.Info("SWITCH OTHER")
 	}
+}
+
+func (c *WsConnContext) Message(data []byte) {
+	meg := model.GroupMessageInput{}
+	err := json.Unmarshal(data, &meg)
+	if err != nil {
+		logrus.Errorf("[Message] json unmarshal %+v", err)
+		return
+	}
+	HandleGroupMessage(&meg)
 }
