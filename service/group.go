@@ -17,15 +17,15 @@ type Group struct {
 }
 
 type SendInfo struct {
-	ReceiverId     int64  // 用户id
+	ReceiverId int64  // 用户id
 	Messgae    string // 消息内容
-	SenderType int64    // 发送者身份，即群聊id
-	SenderId int64    // 发送者id
+	SenderType int64  // 发送者身份，即群聊id
+	SenderId   int64  // 发送者id
 }
 
 const (
-	SenderType_USER = 1
-	ReceiverType_USER = 2
+	SenderType_USER    = 1
+	ReceiverType_USER  = 2
 	ReceiverType_GROUP = 3
 )
 
@@ -51,7 +51,7 @@ func (g *Group) IsMember(userId int64) bool {
 }
 
 func (g *Group) SendMessgae(sendInfo SendInfo) error {
-	if sendInfo.SenderType == SenderType_USER && !g.IsMember(sendInfo.UserId) {
+	if sendInfo.SenderType == SenderType_USER && !g.IsMember(sendInfo.ReceiverId) {
 		logrus.Fatalf("[Service] | group sendmeg error: user isn't in group | sendInfo:", sendInfo)
 		return constant.UserNotMatchGroup
 	}
@@ -70,7 +70,7 @@ func (g *Group) SendMessgae(sendInfo SendInfo) error {
 		// 持久化
 		meg := model.Message{
 			SenderType:   sendInfo.SenderType,
-			SenderId:     sendInfo.UserId,
+			SenderId:     sendInfo.SenderId,
 			ReceiverType: ReceiverType_GROUP,
 			ReceiverId:   g.GroupId,
 			Content:      bytes,
@@ -91,11 +91,11 @@ func (g *Group) SendMessgae(sendInfo SendInfo) error {
 		// 将消息发送给群组用户
 		for _, user := range g.Members {
 			// 前面已经发送过，这里不需要再发送
-			if sendInfo.SenderType == SenderType_USER && user.UserId == sendInfo.UserId {
+			if sendInfo.SenderType == SenderType_USER && user.UserId == sendInfo.SenderId {
 				continue
 			}
-			
-			err = SendToUser(sendInfo.UserId, bytes)
+
+			err = SendToUser(sendInfo.ReceiverId, bytes)
 			if err != nil {
 				logrus.Fatalf("[Service] | group sendmeg error:", err)
 				continue
