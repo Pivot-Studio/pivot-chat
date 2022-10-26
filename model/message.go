@@ -11,17 +11,15 @@ type Message struct {
 	SendTime     time.Time // 消息发送时间（落库时间）
 }
 
-type GroupMessageInput struct {
+type GroupMessageSyncInput struct {
 	UserId     int64 // 发送人userid
 	GroupId int64 // 群组id
-	Data       string
+	SyncSeq int64 // 开始同步的seq，是用户的本地seq+1
 }
 
-type GroupMessageOutput struct {
+type GroupMessageSyncOutput struct {
 	UserId     int64 // 接受者user_id
 	GroupId    int64 // 群组id
-	Data       string
-	SenderId   int64    // 发送者账户id
-	Seq        int64  // 该条消息的正确seq
+	Data       []GroupMessageOutput
+	MaxSeq     int64  // 该群组最新Seq
 }
-

@@ -7,13 +7,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func HandleGroupMessage(meg *model.GroupMessageInput) {
+func HandleSync(meg *model.GroupMessageSyncInput) {
 	if !dao.RS.ExistGroup(meg.GroupId) {
 		return
 	}
-	// group := service.GetUpdatedGroup(meg.GroupId)
-	err := service.SendMessage(meg)
+	err := service.Sync(meg)
 	if err != nil {
-		logrus.Fatalf("[HandleGroupMessage] SendMessage %+v", err)
+		logrus.Fatalf("[HandleSync] service.Sync error %+v", err)
 	}
 }

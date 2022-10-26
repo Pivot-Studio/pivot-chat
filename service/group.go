@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/Pivot-Studio/pivot-chat/constant"
@@ -15,6 +16,9 @@ import (
 type Group struct {
 	*model.Group
 }
+
+var lock sync.Mutex
+
 
 type SendInfo struct {
 	SenderId    int64  // 用户id
@@ -38,18 +42,22 @@ func (g *Group) IsMember(userId int64) bool {
 	return false
 }
 
-func (g *Group) SendMessage(sendInfo *model.GroupMessageInput) error { // 进入这里时，group内容是跟数据库一致的，members也是使用的正确缓存
+func SendMessage(sendInfo *model.GroupMessageInput) error { // 进入这里时，group内容是跟数据库一致的，members也是使用的正确缓存
+	lock.Lock()
+	g := GetUpdatedGroup(sendInfo.GroupId)
 	if !g.IsMember(sendInfo.UserId) {
 		logrus.Fatalf("[Service] | group sendmeg error: user isn't in group | sendInfo:", sendInfo)
 		return constant.UserNotMatchGroup
 	}
-
+	lock.Unlock()
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
 				fmt.Println("Recovered. Error:\n", r)
 			}
 		}()
+		lock.Lock()
+		g = GetUpdatedGroup(sendInfo.GroupId) // 这肯定是最新的
 		// 持久化
 		meg := model.Message{
 			SenderId:   sendInfo.UserId,
@@ -61,14 +69,18 @@ func (g *Group) SendMessage(sendInfo *model.GroupMessageInput) error { // 进入
 		err := dao.RS.CreateMessage([]*model.Message{&meg})
 		if err != nil {
 			logrus.Fatalf("[Service] | conn-manager persist CreateMessage err:", err)
+			lock.Unlock()
 			return
 		}
 		// 持久化消息成功 update group
 		err = dao.RS.IncrGroupSeq(g.GroupId)
 		if err != nil {
 			logrus.Fatalf("[Service] | conn-manager persist IncrGroupSeq err:", err)
+			lock.Unlock()
 			return
 		}
+
+		lock.Unlock()
 		// 将消息发送给群组用户
 		for _, user := range *g.Members {
 			// 前面已经发送过，这里不需要再发送

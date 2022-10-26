@@ -109,9 +109,11 @@ func (c *WsConnContext) HandlePackage(bytes []byte) {
 		fmt.Println("SIGN_IN")
 	case PackageType_PT_SYNC:
 		fmt.Println("SYNC")
+		c.Sync(input.Data)
 	case PackageType_PT_HEARTBEAT:
 		fmt.Println("HEARTBEAT")
 	case PackageType_PT_MESSAGE:
+		fmt.Println("MESSAGE")
 		c.Message(input.Data)
 	default:
 		logrus.Info("SWITCH OTHER")
@@ -126,4 +128,14 @@ func (c *WsConnContext) Message(data []byte) {
 		return
 	}
 	HandleGroupMessage(&meg)
+}
+
+func (c *WsConnContext) Sync(data []byte) {
+	meg := model.GroupMessageSyncInput{}
+	err := json.Unmarshal(data, &meg)
+	if err != nil {
+		logrus.Errorf("[Message] json unmarshal %+v", err)
+		return
+	}
+	HandleSync(&meg)
 }
