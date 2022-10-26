@@ -4,6 +4,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Pivot-Studio/pivot-chat/service"
 	"net/http"
 	"time"
 
@@ -20,9 +21,14 @@ const (
 
 type WsConnContext struct {
 	Conn     *websocket.Conn
-	UserId   int64
 	DeviceId int64
 	AppId    int64
+}
+type LoginInfo struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	DeviceId int64  `json:"device_id"`
+	AppId    int64  `json:"appid"`
 }
 
 const (
@@ -49,10 +55,23 @@ var upgrader = websocket.Upgrader{
 }
 
 func wsHandler(ctx *gin.Context) {
-	//TODO:auth 这里鉴权, 成功就修改一下下面wsConn的id
-	c := WsConnContext{}
-	var err error
+	req := LoginInfo{}
+	err := ctx.ShouldBindJSON(&req)
+	if err != nil {
+		logrus.Fatalf("[api.wsHandler] BindJson %+v", err)
+	}
+	if !service.Auth(req.Email, req.Password) {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"msg": "登录失败, 账号密码错误或不匹配",
+		})
+		return
+	}
 
+	//登录成功, 升级为websocket
+	c := WsConnContext{
+		AppId:    req.AppId,
+		DeviceId: req.DeviceId,
+	}
 	c.Conn, err = upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		logrus.Errorf("[wsHandler] ws upgrade fail, %+v", err)
