@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/Pivot-Studio/pivot-chat/util"
 	"math/rand"
 	"strings"
 	"time"
@@ -16,6 +17,15 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
+func Auth(Email string, Password string) bool {
+	user := &model.User{}
+	err := dao.RS.GetUserByEmail(user, Email)
+	if err != nil {
+		logrus.Fatalf("[Service.Auth] GetUserByEmail file %+v", err)
+		return false
+	}
+	return util.ComparePassword(user.Password, Password)
+}
 func Register(ctx *gin.Context, user *model.User, captcha string) (err error) {
 	//邮箱验证码部分
 	res, err := dao.Cache.Get(context.Background(), user.Email).Result()
@@ -32,14 +42,14 @@ func Register(ctx *gin.Context, user *model.User, captcha string) (err error) {
 	return nil
 }
 
-//生成验证码
+// 生成验证码
 func CreatCode() (code string) {
 	rand.Seed(time.Now().Unix())
 	code = fmt.Sprintf("%6v", rand.Intn(600000))
 	return
 }
 
-//发送验证码
+// 发送验证码
 func SendEmail(ctx *gin.Context, email string, captcha string) (err error) {
 	m := gomail.NewMessage()
 	m.SetHeader("From", conf.C.EmailServer.Email)
@@ -54,13 +64,13 @@ func SendEmail(ctx *gin.Context, email string, captcha string) (err error) {
 	return nil
 }
 
-//将验证码存入redis
+// 将验证码存入redis
 func CaptchaLogic(ctx *gin.Context, code, email string) {
 	codeKey := email
 	dao.Cache.Set(ctx, codeKey, code, time.Minute*5) //存入redis 有效5min
 }
 
-//比较验证码
+// 比较验证码
 func CaptchaCheck(ctx *gin.Context, input string, email string) bool {
 	code := dao.Cache.Get(ctx, email).String() //对比验证码是否一致
 	return code == input
