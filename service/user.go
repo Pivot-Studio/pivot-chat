@@ -60,6 +60,7 @@ func SendEmail(ctx *gin.Context, email string, captcha string) (err error) {
 	err = d.DialAndSend(m)
 	if err != nil {
 		logrus.Error("[SendEmail] send to email:%s err:%+v", email, err)
+		return err
 	}
 	return nil
 }
