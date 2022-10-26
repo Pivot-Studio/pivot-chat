@@ -4,9 +4,11 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Pivot-Studio/pivot-chat/service"
 	"net/http"
 	"time"
 
+	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/sirupsen/logrus"
 
 	"github.com/gin-gonic/gin"
@@ -18,18 +20,16 @@ const (
 	wsTimeout = 12 * time.Minute
 )
 
-type PackageType int
-type Package struct {
-	//数据包内容, 按需修改
-	Type PackageType
-	Id   int64
-	data []byte
-}
 type WsConnContext struct {
 	Conn     *websocket.Conn
-	UserId   int64
 	DeviceId int64
 	AppId    int64
+}
+type LoginInfo struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	DeviceId int64  `json:"device_id"`
+	AppId    int64  `json:"appid"`
 }
 
 const (
@@ -40,6 +40,13 @@ const (
 	PackageType_PT_MESSAGE   PackageType = 4
 )
 
+type PackageType int
+type Package struct {
+	//数据包内容, 按需修改
+	Type PackageType
+	Data []byte
+}
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 65536,
@@ -49,10 +56,23 @@ var upgrader = websocket.Upgrader{
 }
 
 func wsHandler(ctx *gin.Context) {
-	//TODO:auth 这里鉴权, 成功就修改一下下面wsConn的id
-	c := WsConnContext{}
-	var err error
+	req := LoginInfo{}
+	err := ctx.ShouldBindJSON(&req)
+	if err != nil {
+		logrus.Fatalf("[api.wsHandler] BindJson %+v", err)
+	}
+	if !service.Auth(req.Email, req.Password) {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"msg": "登录失败, 账号密码错误或不匹配",
+		})
+		return
+	}
 
+	//登录成功, 升级为websocket
+	c := WsConnContext{
+		AppId:    req.AppId,
+		DeviceId: req.DeviceId,
+	}
 	c.Conn, err = upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		logrus.Errorf("[wsHandler] ws upgrade fail, %+v", err)
@@ -92,8 +112,18 @@ func (c *WsConnContext) HandlePackage(bytes []byte) {
 	case PackageType_PT_HEARTBEAT:
 		fmt.Println("HEARTBEAT")
 	case PackageType_PT_MESSAGE:
-		fmt.Println("MESSAGE")
+		c.Message(input.Data)
 	default:
 		logrus.Info("SWITCH OTHER")
 	}
+}
+
+func (c *WsConnContext) Message(data []byte) {
+	meg := model.GroupMessageInput{}
+	err := json.Unmarshal(data, &meg)
+	if err != nil {
+		logrus.Errorf("[Message] json unmarshal %+v", err)
+		return
+	}
+	HandleGroupMessage(&meg)
 }
