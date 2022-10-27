@@ -48,8 +48,8 @@ const (
 type PackageType int
 type Package struct {
 	//数据包内容, 按需修改
-	Type PackageType
-	Data []byte
+	Type PackageType `json:"type"`
+	Data []byte      `json:"data"`
 }
 
 var upgrader = websocket.Upgrader{
