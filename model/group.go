@@ -14,8 +14,9 @@ type Group struct {
 }
 
 type GroupUser struct {
-	GroupUserId int64     `gorm:"primarykey"` // 自增主键
-	UserId      int64     // 用户id
+	GroupUserId int64 `gorm:"primarykey"` // 自增主键
+	UserId      int64 // 用户id
+	GroupID     int64
 	MemberType  int       // 用户在当前群组的role
 	Status      int       // 状态
 	CreateTime  time.Time // 创建时间
@@ -23,15 +24,15 @@ type GroupUser struct {
 }
 
 type GroupMessageInput struct {
-	UserId     int64 // 发送人userid
+	UserId  int64 // 发送人userid
 	GroupId int64 // 群组id
-	Data       string
+	Data    string
 }
 
 type GroupMessageOutput struct {
-	UserId     int64 // 接受者user_id
-	GroupId    int64 // 群组id
-	Data       string
-	SenderId   int64    // 发送者账户id
-	Seq        int64  // 该条消息的正确seq
+	UserId   int64 // 接受者user_id
+	GroupId  int64 // 群组id
+	Data     string
+	SenderId int64 // 发送者账户id
+	Seq      int64 // 该条消息的正确seq
 }
