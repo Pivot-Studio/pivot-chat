@@ -34,14 +34,14 @@ func (rs *RdbService) GetUserbyUsername(user *model.User) (err error) {
 	return nil
 }
 
-func (rs *RdbService) ChangeUserPwd(user *model.User, newPwd string) (err error) {
+func (rs *RdbService) ChangeUserPwd(user *model.User, oldPwd string, newPwd string) (err error) {
 
 	err = rs.GetUserbyUsername(user)
 	if err != nil {
 		return err
 	}
 
-	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(newPwd)) != nil {
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPwd)) != nil {
 		return errors.New("the password is wrong please try again")
 	}
 
