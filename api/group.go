@@ -1,19 +1,25 @@
 package api
 
 import (
+	"errors"
+
 	"github.com/Pivot-Studio/pivot-chat/dao"
 	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/Pivot-Studio/pivot-chat/service"
-	"github.com/sirupsen/logrus"
 )
 
-func HandleGroupMessage(meg *model.GroupMessageInput) {
+func HandleGroupMessage(meg *model.GroupMessageInput) error {
 	if !dao.RS.ExistGroup(meg.GroupId) {
-		return
+		return errors.New("group not existed!")
 	}
-	// group := service.GetUpdatedGroup(meg.GroupId)
 	err := service.SendMessage(meg)
-	if err != nil {
-		logrus.Fatalf("[HandleGroupMessage] SendMessage %+v", err)
+	return err
+}
+
+func HandleJoinGroup(meg *model.UserJoinGroupInput) error {
+	if !dao.RS.ExistGroup(meg.GroupId) {
+		return errors.New("group not existed!")
 	}
+	err := service.UserJoinGroup(meg)
+	return err
 }

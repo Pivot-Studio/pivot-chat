@@ -36,11 +36,13 @@ type LoginInfo struct {
 }
 
 const (
+	PackageType_PT_ERR       PackageType = 0
 	PackageType_PT_UNKNOWN   PackageType = 0
 	PackageType_PT_SIGN_IN   PackageType = 1
 	PackageType_PT_SYNC      PackageType = 2
 	PackageType_PT_HEARTBEAT PackageType = 3
 	PackageType_PT_MESSAGE   PackageType = 4
+	PackageType_PT_JOINGROUP PackageType = 5
 )
 
 type PackageType int
@@ -96,20 +98,22 @@ func wsHandler(ctx *gin.Context) {
 		_, data, err := conn.WS.ReadMessage()
 		if err != nil {
 			logrus.Errorf("[wsHandler] ReadMessage failed, %+v", err)
-			service.DeleteConn(user.UserId)
+			service.DeleteConn(user.UserId) // 出现差错就从map里删除
 			return
 		}
-		HandlePackage(data)
+		HandlePackage(data, &conn)
 	}
 }
 
 // HandlePackage 分类型处理数据包
-func HandlePackage(bytes []byte) {
+func HandlePackage(bytes []byte, conn *service.Conn) {
 	input := Package{}
 	err := json.Unmarshal(bytes, &input)
 	if err != nil {
 		logrus.Errorf("[HandlePackage] json unmarshal %+v", err)
 		//TODO: release连接
+		bytesErr, _ := json.Marshal(err.Error())
+		conn.Send(bytesErr, service.PackageType(PackageType_PT_ERR))
 		return
 	}
 
@@ -122,33 +126,52 @@ func HandlePackage(bytes []byte) {
 		fmt.Println("SIGN_IN")
 	case PackageType_PT_SYNC:
 		fmt.Println("SYNC")
-		Sync(input.Data)
+		err = Sync(input.Data)
 	case PackageType_PT_HEARTBEAT:
 		fmt.Println("HEARTBEAT")
 	case PackageType_PT_MESSAGE:
 		fmt.Println("MESSAGE")
-		Message(input.Data)
+		err = Message(input.Data)
+	case PackageType_PT_JOINGROUP:
+		fmt.Println("JOINGROUP")
+		err = UserJoinGroup(input.Data)
 	default:
 		logrus.Info("SWITCH OTHER")
 	}
+	if err != nil {
+		fmt.Println(err)
+		bytesErr, _ := json.Marshal(err.Error())
+		conn.Send(bytesErr, service.PackageType(PackageType_PT_ERR))
+		return
+	}
 }
 
-func Message(data []byte) {
+func Message(data []byte) error {
 	meg := model.GroupMessageInput{}
 	err := json.Unmarshal(data, &meg)
 	if err != nil {
 		logrus.Errorf("[Message] json unmarshal %+v", err)
-		return
+		return err
 	}
-	HandleGroupMessage(&meg)
+	return HandleGroupMessage(&meg)
 }
 
-func Sync(data []byte) {
+func Sync(data []byte) error {
 	meg := model.GroupMessageSyncInput{}
 	err := json.Unmarshal(data, &meg)
 	if err != nil {
 		logrus.Errorf("[Message] json unmarshal %+v", err)
-		return
+		return err
 	}
-	HandleSync(&meg)
+	return HandleSync(&meg)
+}
+
+func UserJoinGroup(data []byte) error {
+	meg := model.UserJoinGroupInput{}
+	err := json.Unmarshal(data, &meg)
+	if err != nil {
+		logrus.Errorf("[Message] json unmarshal %+v", err)
+		return err
+	}
+	return HandleJoinGroup(&meg)
 }

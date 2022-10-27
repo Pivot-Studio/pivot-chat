@@ -19,12 +19,11 @@ type Group struct {
 
 var lock sync.Mutex
 
-
 type SendInfo struct {
-	SenderId    int64  // 用户id
-	SenderType  int64  // 发送者身份
-	Message     string // 消息内容
-	ReceiverId  int64  // 群组id
+	SenderId   int64  // 用户id
+	SenderType int64  // 发送者身份
+	Message    string // 消息内容
+	ReceiverId int64  // 群组id
 }
 
 const (
@@ -33,9 +32,9 @@ const (
 	ReceiverType_GROUP = 3
 )
 
-func (g *Group) IsMember(userId int64) bool {
-	for i := range *g.Members {
-		if (*g.Members)[i].UserId == userId {
+func IsMember(userId int64, members []model.GroupUser) bool {
+	for i := range members {
+		if members[i].UserId == userId {
 			return true
 		}
 	}
@@ -44,51 +43,60 @@ func (g *Group) IsMember(userId int64) bool {
 
 func SendMessage(sendInfo *model.GroupMessageInput) error { // 进入这里时，group内容是跟数据库一致的，members也是使用的正确缓存
 	lock.Lock()
-	g := GetUpdatedGroup(sendInfo.GroupId)
-	if !g.IsMember(sendInfo.UserId) {
+	defer lock.Unlock()
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		fmt.Println("Recovered. Error:\n", r)
+	// 	}
+	// }()
+	g, err := GetUpdatedGroup(sendInfo.GroupId) // 这肯定是最新的，而且是一次
+	if err != nil {
+		return err
+	}
+	members, err := dao.RS.GetGroupUsers(g.GroupId)
+	if err != nil {
+		return err
+	}
+
+	if !IsMember(sendInfo.UserId, members) {
 		logrus.Fatalf("[Service] | group sendmeg error: user isn't in group | sendInfo:", sendInfo)
 		return constant.UserNotMatchGroup
 	}
-	lock.Unlock()
-	go func() {
-		defer func() {
-			if r := recover(); r != nil {
-				fmt.Println("Recovered. Error:\n", r)
-			}
-		}()
-		lock.Lock()
-		g = GetUpdatedGroup(sendInfo.GroupId) // 这肯定是最新的
-		// 持久化
-		meg := model.Message{
-			SenderId:   sendInfo.UserId,
-			ReceiverId: sendInfo.GroupId,
-			Content:    sendInfo.Data,
-			Seq:        g.MaxSeq + 1,
-			SendTime:   time.Now(),
-		}
-		err := dao.RS.CreateMessage([]*model.Message{&meg})
-		if err != nil {
-			logrus.Fatalf("[Service] | conn-manager persist CreateMessage err:", err)
-			lock.Unlock()
-			return
-		}
-		// 持久化消息成功 update group
-		err = dao.RS.IncrGroupSeq(g.GroupId)
-		if err != nil {
-			logrus.Fatalf("[Service] | conn-manager persist IncrGroupSeq err:", err)
-			lock.Unlock()
-			return
-		}
+	// 持久化
+	meg := model.Message{
+		SenderId:   sendInfo.UserId,
+		ReceiverId: sendInfo.GroupId,
+		Content:    sendInfo.Data,
+		Seq:        g.MaxSeq + 1,
+		SendTime:   time.Now(),
+	}
+	err = dao.RS.CreateMessage([]*model.Message{&meg})
+	if err != nil {
+		logrus.Fatalf("[Service] | conn-manager persist CreateMessage err:", err)
+		return err
+	}
+	// 持久化消息成功 update group
+	err = dao.RS.IncrGroupSeq(g.GroupId)
+	if err != nil {
+		logrus.Fatalf("[Service] | conn-manager persist IncrGroupSeq err:", err)
+		return err
+	}
 
-		lock.Unlock()
-		// 将消息发送给群组用户
-		for _, user := range *g.Members {
-			// 前面已经发送过，这里不需要再发送
-			// if sendInfo.SenderType == SenderType_USER && user.UserId == sendInfo.SenderId {
-			// 	continue
-			// }
-			output := model.GroupMessageOutput{ 
-				UserId:   user.UserId,
+	// 将消息发送给群组用户
+	for _, user := range members {
+		// 前面已经发送过，这里不需要再发送
+		// if sendInfo.SenderType == SenderType_USER && user.UserId == sendInfo.SenderId {
+		// 	continue
+		// }
+		user0 := user
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Println("Recovered. Error:\n", r)
+				}
+			}()
+			output := model.GroupMessageOutput{
+				UserId:   user0.UserId,
 				GroupId:  g.GroupId,
 				Data:     sendInfo.Data,
 				SenderId: sendInfo.UserId,
@@ -99,27 +107,55 @@ func SendMessage(sendInfo *model.GroupMessageInput) error { // 进入这里时�
 				logrus.Fatalf("[Service] | conn-manager json Marshal err:", err)
 				return
 			}
-			err = SendToUser(user.UserId, bytes)
+			err = SendToUser(user0.UserId, bytes, PackageType_PT_MESSAGE)
 			if err != nil {
 				logrus.Fatalf("[Service] | group sendmeg error:", err)
-				continue
+				return
 			}
-		}
-	}()
+		}()
+	}
 	return nil
 }
 
-// func HandleGroupMessage(meg *model.Message) {
-// 	if !dao.RS.ExistGroup(meg.ReceiverId) {
-// 		return
-// 	}
-// 	group := GetUpdatedGroup(meg.ReceiverId)
-// 	err := group.SendMessage(SendInfo{
-// 		SenderId:     meg.SenderId,
-// 		Message:    string(meg.Content),
-// 		SenderType: meg.SenderType,
-// 	})
-// 	if err != nil {
-// 		logrus.Fatalf("[HandleGroupMessage] SendMessage %+v", err)
-// 	}
-// }
+func UserJoinGroup(input *model.UserJoinGroupInput) error {
+	lock.Lock()
+	defer lock.Unlock()
+	g, err := GetUpdatedGroup(input.GroupId) // 这肯定是最新的，而且是一次
+	if err != nil {
+		return err
+	}
+	groupUser := model.GroupUser{
+		UserId:     input.UserId,
+		MemberType: model.SPEAKER,
+		Status:     0,
+		CreateTime: time.Now(),
+		UpdateTime: time.Now(),
+	}
+	err = dao.RS.CreateGroupUser([]*model.GroupUser{&groupUser})
+	if err != nil {
+		return err
+	}
+	err = dao.RS.IncrGroupUserNum(g.GroupId)
+	if err != nil {
+		return err
+	}
+	output := model.UserJoinGroupOutput{
+		UserId:       input.UserId,
+		GroupId:      g.GroupId,
+		Name:         g.Name,
+		Introduction: g.Introduction,
+		UserNum:      g.UserNum,
+		CreateTime:   g.CreateTime,
+	}
+	bytes, err := json.Marshal(output)
+	if err != nil {
+		logrus.Fatalf("[Service] | conn-manager json Marshal err:", err)
+		return err
+	}
+	err = SendToUser(input.UserId, bytes, PackageType_PT_JOINGROUP)
+	if err != nil {
+		logrus.Fatalf("[Service] | UserJoinGroup error:", err)
+		return err
+	}
+	return nil
+}
