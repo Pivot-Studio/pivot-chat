@@ -59,6 +59,7 @@ type Package struct {
 	//数据包内容, 按需修改
 	Type PackageType `json:"type"`
 	Data []byte      `json:"data"`
+	// Data string `json:"data"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -123,7 +124,21 @@ func wsHandler(ctx *gin.Context) {
 	// 		Email:    user.Email,
 	// 	},
 	// })
-	err = conn.Send([]byte("ack:login success!"), service.PackageType(PackageType_PT_SIGN_IN))
+
+	reps := LoginResponse{
+		Msg: "连接成功",
+		data: struct {
+			Username string `json:"username"`
+			UserId   int64  `json:"user_id"`
+			Email    string `json:"email"`
+		}{
+			Username: user.UserName,
+			UserId:   user.UserId,
+			Email:    user.Email,
+		},
+	}
+	bytes, _ := json.Marshal(reps)
+	err = conn.Send(bytes, service.PackageType(PackageType_PT_SIGN_IN))
 	if err != nil {
 		logrus.Errorf("[wsHandler] Send login ack failed, %+v", err)
 		service.DeleteConn(user.UserId) // 出现差错就从map里删除
@@ -197,7 +212,7 @@ func Message(data []byte, userId int64) error {
 
 func Sync(data []byte, userId int64) error {
 	meg := model.GroupMessageSyncInput{}
-	err := json.Unmarshal(data, &meg)
+	err := json.Unmarshal([]byte(data), &meg)
 	if err != nil {
 		logrus.Errorf("[Message] json unmarshal %+v", err)
 		return err
