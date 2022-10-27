@@ -169,13 +169,13 @@ var (
 				src="https://static.pivotstudio.cn/husthole/res/verification.svg"
 				alt=""
 		/>
-		<div class="main-bold">请验证校园邮箱。</div>
+		<div class="main-bold">请验证邮箱。</div>
 		<div class="main-normal">您的验证码是:</div>
 		<div class="code">VerifyCodePlace</div>
 		<div class="content">
 			<div>如果不是您本人操作, 请忽略此邮件。</div>
 			<div style="margin: 12px 0;">祝好！</div>
-			<div style="margin-bottom: 20px;">Pivot Studio团队-1037树洞项目组</div>
+			<div style="margin-bottom: 20px;">Pivot Studio团队-pivot chat项目组</div>
 			<div class="border"></div>
 		</div>
 		<div class="footer">
