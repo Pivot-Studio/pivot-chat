@@ -25,14 +25,23 @@ const (
 
 type WsConnContext struct {
 	Conn     *websocket.Conn
+	UserId   int64
 	DeviceId int64
 	AppId    int64
 }
 type LoginInfo struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	DeviceId int64  `json:"device_id"`
-	AppId    int64  `json:"appid"`
+	//DeviceId int64  `json:"device_id"`
+	//AppId    int64  `json:"appid"`
+}
+type LoginResponse struct {
+	Msg  string `json:"msg"`
+	data struct {
+		Username string `json:"username"`
+		UserId   int64  `json:"user_id"`
+		Email    string `json:"email"`
+	}
 }
 
 const (
@@ -61,18 +70,26 @@ var upgrader = websocket.Upgrader{
 }
 
 func wsHandler(ctx *gin.Context) {
-	req := LoginInfo{}
-	err := ctx.ShouldBindJSON(&req)
-	if err != nil {
-		logrus.Fatalf("[api.wsHandler] BindJson %+v", err)
+	//todo 紧急解决
+	req := LoginInfo{
+		Email:    ctx.Query("email"),
+		Password: ctx.Query("password"),
 	}
+	logrus.Infof("email:%s password:%s", req.Email, req.Password)
+	if req.Email == "" || req.Password == "" {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"msg": "登录失败, 账号密码不能为空",
+		})
+		return
+	}
+
 	if !service.Auth(req.Email, req.Password) {
 		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 			"msg": "登录失败, 账号密码错误或不匹配",
 		})
 		return
 	}
-
+	var err error
 	// 登录成功, 升级为websocket
 	conn := service.Conn{
 		WSMutex: sync.Mutex{},
@@ -92,6 +109,21 @@ func wsHandler(ctx *gin.Context) {
 	// conn加入map
 	conn.UserId = user.UserId
 	service.SetConn(user.UserId, &conn)
+
+	//给前端返回信息
+	ctx.JSON(http.StatusOK, LoginResponse{
+		Msg: "连接成功",
+		data: struct {
+			Username string `json:"username"`
+			UserId   int64  `json:"user_id"`
+			Email    string `json:"email"`
+		}{
+			Username: user.UserName,
+			UserId:   user.UserId,
+			Email:    user.Email,
+		},
+	})
+
 	//处理连接
 	for {
 		err = conn.WS.SetReadDeadline(time.Now().Add(wsTimeout))
