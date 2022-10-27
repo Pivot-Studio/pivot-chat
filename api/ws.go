@@ -126,15 +126,15 @@ func HandlePackage(bytes []byte, conn *service.Conn) {
 		fmt.Println("SIGN_IN")
 	case PackageType_PT_SYNC:
 		fmt.Println("SYNC")
-		err = Sync(input.Data)
+		err = Sync(input.Data, conn.UserId)
 	case PackageType_PT_HEARTBEAT:
 		fmt.Println("HEARTBEAT")
 	case PackageType_PT_MESSAGE:
 		fmt.Println("MESSAGE")
-		err = Message(input.Data)
+		err = Message(input.Data, conn.UserId)
 	case PackageType_PT_JOINGROUP:
 		fmt.Println("JOINGROUP")
-		err = UserJoinGroup(input.Data)
+		err = UserJoinGroup(input.Data, conn.UserId)
 	default:
 		logrus.Info("SWITCH OTHER")
 	}
@@ -146,32 +146,35 @@ func HandlePackage(bytes []byte, conn *service.Conn) {
 	}
 }
 
-func Message(data []byte) error {
+func Message(data []byte, userId int64) error {
 	meg := model.GroupMessageInput{}
 	err := json.Unmarshal(data, &meg)
 	if err != nil {
 		logrus.Errorf("[Message] json unmarshal %+v", err)
 		return err
 	}
+	meg.UserId = userId
 	return HandleGroupMessage(&meg)
 }
 
-func Sync(data []byte) error {
+func Sync(data []byte, userId int64) error {
 	meg := model.GroupMessageSyncInput{}
 	err := json.Unmarshal(data, &meg)
 	if err != nil {
 		logrus.Errorf("[Message] json unmarshal %+v", err)
 		return err
 	}
+	meg.UserId = userId
 	return HandleSync(&meg)
 }
 
-func UserJoinGroup(data []byte) error {
+func UserJoinGroup(data []byte, userId int64) error {
 	meg := model.UserJoinGroupInput{}
 	err := json.Unmarshal(data, &meg)
 	if err != nil {
 		logrus.Errorf("[Message] json unmarshal %+v", err)
 		return err
 	}
+	meg.UserId = userId
 	return HandleJoinGroup(&meg)
 }
