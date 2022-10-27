@@ -36,7 +36,7 @@ func ChgPwd(ctx *gin.Context) {
 	if err != nil {
 		logrus.Errorf("[chgPwd] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "修改密码失败",
+			"msg": "参数绑定错误，修改密码失败",
 		})
 		return
 	}
@@ -44,7 +44,7 @@ func ChgPwd(ctx *gin.Context) {
 	if err != nil {
 		logrus.Errorf("[chgPwd] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "修改密码失败",
+			"msg": "密码hash失败，修改密码失败",
 		})
 		return
 	}
@@ -52,7 +52,7 @@ func ChgPwd(ctx *gin.Context) {
 	if err != nil {
 		logrus.Errorf("[chgPwd] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "修改密码失败",
+			"msg": "修改密码失败:" + err.Error(),
 		})
 		return
 	}
@@ -62,7 +62,7 @@ func ChgPwd(ctx *gin.Context) {
 	if err != nil {
 		logrus.Errorf("[chgPwd] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "修改密码失败",
+			"msg": "修改密码失败:" + err.Error(),
 		})
 		return
 	}
@@ -77,7 +77,7 @@ func Register(ctx *gin.Context) {
 	if err != nil {
 		logrus.Errorf("[Register] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "注册失败",
+			"msg": "参数解析错误，注册失败",
 		})
 		return
 	}
@@ -86,7 +86,7 @@ func Register(ctx *gin.Context) {
 	if err != nil {
 		logrus.Errorf("[Register] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "注册失败",
+			"msg": "密码hash失败，注册失败",
 		})
 		return
 	}
@@ -100,7 +100,7 @@ func Register(ctx *gin.Context) {
 	if err != nil {
 		logrus.Errorf("[Register] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "注册失败",
+			"msg": err,
 		})
 		return
 	}
