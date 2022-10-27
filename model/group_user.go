@@ -3,7 +3,8 @@ package model
 import "time"
 
 type GroupUser struct {
-	GroupUserId int64     `gorm:"primarykey"` // 自增主键
+	GroupUserId int64 `gorm:"primarykey"` // 自增主键
+	GroupId     int64
 	UserId      int64     // 用户id
 	MemberType  int       // 用户在当前群组的role
 	Status      int       // 状态

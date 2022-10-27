@@ -125,6 +125,7 @@ func UserJoinGroup(input *model.UserJoinGroupInput) error {
 		return err
 	}
 	groupUser := model.GroupUser{
+		GroupId:    input.GroupId,
 		UserId:     input.UserId,
 		MemberType: model.SPEAKER,
 		Status:     0,
