@@ -46,5 +46,5 @@ func (c *Conn) Send(data []byte, t PackageType) error {
 	if err != nil {
 		return err
 	}
-	return c.WS.WriteMessage(websocket.BinaryMessage, bytes)
+	return c.WS.WriteMessage(websocket.TextMessage, bytes)
 }
