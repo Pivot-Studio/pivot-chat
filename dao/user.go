@@ -2,7 +2,9 @@ package dao
 
 import (
 	"errors"
+
 	"github.com/Pivot-Studio/pivot-chat/model"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (rs *RdbService) CreateUser(user []*model.User) error {
@@ -32,14 +34,14 @@ func (rs *RdbService) GetUserbyUsername(user *model.User) (err error) {
 	return nil
 }
 
-func (rs *RdbService) ChangeUserPwd(user *model.User, oldPwd string, newPwd string) (err error) {
+func (rs *RdbService) ChangeUserPwd(user *model.User, newPwd string) (err error) {
 
 	err = rs.GetUserbyUsername(user)
 	if err != nil {
 		return err
 	}
 
-	if user.Password != oldPwd {
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(newPwd)) != nil {
 		return errors.New("the password is wrong please try again")
 	}
 

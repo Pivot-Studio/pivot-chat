@@ -40,14 +40,6 @@ func ChgPwd(ctx *gin.Context) {
 		})
 		return
 	}
-	oldPwdHash, err := util.EncodePassword(p.OldPwd)
-	if err != nil {
-		logrus.Errorf("[chgPwd] %+v", err)
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "修改密码失败:" + err.Error(),
-		})
-		return
-	}
 	newPwdHash, err := util.EncodePassword(p.NewPwd)
 	if err != nil {
 		logrus.Errorf("[chgPwd] %+v", err)
@@ -57,7 +49,7 @@ func ChgPwd(ctx *gin.Context) {
 		return
 	}
 
-	err = service.ChgPwd(ctx, p.UserName, oldPwdHash, newPwdHash)
+	err = service.ChgPwd(ctx, p.UserName, newPwdHash)
 
 	if err != nil {
 		logrus.Errorf("[chgPwd] %+v", err)

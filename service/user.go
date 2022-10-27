@@ -86,6 +86,6 @@ func CaptchaCheck(ctx *gin.Context, input string, email string) bool {
 	return code == input
 }
 
-func ChgPwd(ctx *gin.Context, userName string, oldPwd string, newPwd string) error {
-	return dao.RS.ChangeUserPwd(&model.User{UserName: userName}, oldPwd, newPwd)
+func ChgPwd(ctx *gin.Context, userName string, newPwd string) error {
+	return dao.RS.ChangeUserPwd(&model.User{UserName: userName}, newPwd)
 }
