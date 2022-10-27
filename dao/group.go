@@ -27,9 +27,3 @@ func (rs *RdbService) QueryGroup(groupID int64) (*model.Group, error) {
 	err := rs.tx.Table("groups").Where("group_id = ?", groupID).Take(&g).Error
 	return &g, err
 }
-
-func (rs *RdbService) GetGroupUsers(groupID int64) ([]model.GroupUser, error) {
-	var g []model.GroupUser
-	err := rs.tx.Table("groups").Where("group_id = ?", groupID).Find(&g).Error
-	return g, err
-}
