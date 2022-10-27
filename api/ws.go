@@ -25,6 +25,7 @@ const (
 
 type WsConnContext struct {
 	Conn     *websocket.Conn
+	UserId   int64
 	DeviceId int64
 	AppId    int64
 }
@@ -33,6 +34,14 @@ type LoginInfo struct {
 	Password string `json:"password"`
 	DeviceId int64  `json:"device_id"`
 	AppId    int64  `json:"appid"`
+}
+type LoginResponse struct {
+	Msg  string `json:"msg"`
+	data struct {
+		Username string `json:"username"`
+		UserId   int64  `json:"user_id"`
+		Email    string `json:"email"`
+	}
 }
 
 const (
@@ -92,6 +101,21 @@ func wsHandler(ctx *gin.Context) {
 	// conn加入map
 	conn.UserId = user.UserId
 	service.SetConn(user.UserId, &conn)
+
+	//给前端返回信息
+	ctx.JSON(http.StatusOK, LoginResponse{
+		Msg: "连接成功",
+		data: struct {
+			Username string `json:"username"`
+			UserId   int64  `json:"user_id"`
+			Email    string `json:"email"`
+		}{
+			Username: user.UserName,
+			UserId:   user.UserId,
+			Email:    user.Email,
+		},
+	})
+
 	//处理连接
 	for {
 		err = conn.WS.SetReadDeadline(time.Now().Add(wsTimeout))
