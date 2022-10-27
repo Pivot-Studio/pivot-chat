@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
 
@@ -23,29 +24,32 @@ type chgPwdParam struct {
 }
 
 type emailParam struct {
-	Email    string `form:"email" binding:"required"`
+	Email string `form:"email" binding:"required"`
 }
 
 func ChgPwd(ctx *gin.Context) {
 	p := &chgPwdParam{}
 	err := ctx.ShouldBind(p)
 	if err != nil {
+		logrus.Errorf("[chgPwd] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "[chgPwd]:" + err.Error(),
+			"msg": "修改密码失败",
 		})
 		return
 	}
 	oldPwdHash, err := util.EncodePassword(p.OldPwd)
 	if err != nil {
+		logrus.Errorf("[chgPwd] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "[chgPwd]:" + err.Error(),
+			"msg": "修改密码失败",
 		})
 		return
 	}
 	newPwdHash, err := util.EncodePassword(p.NewPwd)
 	if err != nil {
+		logrus.Errorf("[chgPwd] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "[chgPwd]:" + err.Error(),
+			"msg": "修改密码失败",
 		})
 		return
 	}
@@ -53,8 +57,9 @@ func ChgPwd(ctx *gin.Context) {
 	err = service.ChgPwd(ctx, p.UserName, oldPwdHash, newPwdHash)
 
 	if err != nil {
+		logrus.Errorf("[chgPwd] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "[chgPwd]:" + err.Error(),
+			"msg": "修改密码失败",
 		})
 		return
 	}
@@ -67,16 +72,18 @@ func Register(ctx *gin.Context) {
 	p := &registerParam{}
 	err := ctx.ShouldBind(p)
 	if err != nil {
+		logrus.Errorf("[Register] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "[Register]:" + err.Error(),
+			"msg": "注册失败",
 		})
 		return
 	}
 
 	passwordHash, err := util.EncodePassword(p.Password)
 	if err != nil {
+		logrus.Errorf("[Register] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "[Register]:" + err.Error(),
+			"msg": "注册失败",
 		})
 		return
 	}
@@ -88,8 +95,9 @@ func Register(ctx *gin.Context) {
 		UpdateAt: time.Now(),
 	}, p.Captcha)
 	if err != nil {
+		logrus.Errorf("[Register] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "[Register]:" + err.Error(),
+			"msg": "注册失败",
 		})
 		return
 	}
@@ -102,20 +110,22 @@ func Email(ctx *gin.Context) {
 	p := &emailParam{}
 	err := ctx.ShouldBind(p)
 	if err != nil {
+		logrus.Errorf("[Email] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "[Email]:" + err.Error(),
+			"msg": "邮箱或密码格式不合法",
 		})
 		return
 	}
 	code := service.CreatCode()
 	err = service.SendEmail(ctx, p.Email, code)
 	if err != nil {
+		logrus.Errorf("[Email] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "[Email]:" + err.Error(),
+			"msg": "验证码发送失败",
 		})
 		return
 	}
-	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"msg": "发送验证码成功",
 	})
 }
