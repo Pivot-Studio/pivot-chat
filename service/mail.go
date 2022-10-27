@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/Pivot-Studio/pivot-chat/conf"
 	"gopkg.in/gomail.v2"
 )
 
@@ -188,3 +189,12 @@ var (
 	</body>
 	</html>`
 )
+
+func init() {
+	d = gomail.NewDialer(
+		conf.C.EmailServer.Host,
+		conf.C.EmailServer.Port,
+		conf.C.EmailServer.Email,
+		conf.C.EmailServer.Password,
+	)
+}
