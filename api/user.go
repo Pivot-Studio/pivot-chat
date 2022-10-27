@@ -44,7 +44,7 @@ func ChgPwd(ctx *gin.Context) {
 	if err != nil {
 		logrus.Errorf("[chgPwd] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "密码hash失败，修改密码失败",
+			"msg": "修改密码失败:" + err.Error(),
 		})
 		return
 	}

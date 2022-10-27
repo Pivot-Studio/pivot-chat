@@ -2,11 +2,14 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/Pivot-Studio/pivot-chat/util"
 	"math/rand"
 	"strings"
 	"time"
+
+	"github.com/Pivot-Studio/pivot-chat/util"
+	"gorm.io/gorm"
 
 	"github.com/Pivot-Studio/pivot-chat/conf"
 	"github.com/Pivot-Studio/pivot-chat/constant"
@@ -34,6 +37,12 @@ func Register(ctx *gin.Context, user *model.User, captcha string) (err error) {
 	}
 	if res != captcha {
 		return constant.CaptchaErr
+	}
+	err = dao.RS.GetUserByEmail(&model.User{Email: user.Email}, user.Email)
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New("该邮箱已注册")
+	} else if err != nil {
+		return err
 	}
 	err = dao.RS.CreateUser([]*model.User{user})
 	if err != nil {
