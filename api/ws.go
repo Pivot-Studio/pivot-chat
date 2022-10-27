@@ -32,8 +32,8 @@ type WsConnContext struct {
 type LoginInfo struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	DeviceId int64  `json:"device_id"`
-	AppId    int64  `json:"appid"`
+	//DeviceId int64  `json:"device_id"`
+	//AppId    int64  `json:"appid"`
 }
 type LoginResponse struct {
 	Msg  string `json:"msg"`
@@ -70,18 +70,26 @@ var upgrader = websocket.Upgrader{
 }
 
 func wsHandler(ctx *gin.Context) {
-	req := LoginInfo{}
-	err := ctx.ShouldBindJSON(&req)
-	if err != nil {
-		logrus.Fatalf("[api.wsHandler] BindJson %+v", err)
+	//todo 紧急解决
+	req := LoginInfo{
+		Email:    ctx.Query("email"),
+		Password: ctx.Query("password"),
 	}
+	logrus.Infof("email:%s password:%s", req.Email, req.Password)
+	if req.Email == "" || req.Password == "" {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"msg": "登录失败, 账号密码不能为空",
+		})
+		return
+	}
+
 	if !service.Auth(req.Email, req.Password) {
 		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 			"msg": "登录失败, 账号密码错误或不匹配",
 		})
 		return
 	}
-
+	var err error
 	// 登录成功, 升级为websocket
 	conn := service.Conn{
 		WSMutex: sync.Mutex{},
