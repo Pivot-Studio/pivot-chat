@@ -132,9 +132,9 @@ func wsHandler(ctx *gin.Context) {
 			UserId   int64  `json:"user_id"`
 			Email    string `json:"email"`
 		}{
-			Username: user.UserName,
-			UserId:   user.UserId,
-			Email:    user.Email,
+			Username: "user.UserName",
+			UserId:   114514,
+			Email:    "user.Email",
 		},
 	}
 	bytes, _ := json.Marshal(reps)
