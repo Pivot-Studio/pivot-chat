@@ -111,18 +111,30 @@ func wsHandler(ctx *gin.Context) {
 	service.SetConn(user.UserId, &conn)
 
 	//给前端返回信息
-	ctx.JSON(http.StatusOK, LoginResponse{
-		Msg: "连接成功",
-		data: struct {
-			Username string `json:"username"`
-			UserId   int64  `json:"user_id"`
-			Email    string `json:"email"`
-		}{
-			Username: user.UserName,
-			UserId:   user.UserId,
-			Email:    user.Email,
-		},
-	})
+	// ctx.JSON(http.StatusOK, LoginResponse{
+	// 	Msg: "连接成功",
+	// 	data: struct {
+	// 		Username string `json:"username"`
+	// 		UserId   int64  `json:"user_id"`
+	// 		Email    string `json:"email"`
+	// 	}{
+	// 		Username: user.UserName,
+	// 		UserId:   user.UserId,
+	// 		Email:    user.Email,
+	// 	},
+	// })
+	ack, _ := json.Marshal("login success!")
+	ret := Package{
+		Type: PackageType_PT_SIGN_IN,
+		Data: ack,
+	}
+	bytes, _ := json.Marshal(ret)
+	err = conn.Send(bytes, service.PackageType(PackageType_PT_SIGN_IN))
+	if err != nil {
+		logrus.Errorf("[wsHandler] Send login ack failed, %+v", err)
+		service.DeleteConn(user.UserId) // 出现差错就从map里删除
+		return
+	}
 
 	//处理连接
 	for {
