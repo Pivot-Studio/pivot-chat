@@ -7,12 +7,12 @@ import (
 
 var ConnsManager = sync.Map{} // (userID, conn)
 
-func SendToUser(userID int64, data []byte) error {
+func SendToUser(userID int64, data []byte, infoType PackageType) error {
 	conn := GetConn(userID)
 	if conn == nil {
 		return errors.New("[Service] | conn-manager get connection err")
 	}
-	err := conn.Send(data)
+	err := conn.Send(data, infoType)
 	return err
 }
 

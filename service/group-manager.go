@@ -25,30 +25,22 @@ func DeleteGroup(groupID int64) {
 }
 
 // GetUpdatedGroup 得到最新的group
-func GetUpdatedGroup(groupID int64) *Group {
+func GetUpdatedGroup(groupID int64) (*Group, error) {
 	//总是保持除member之外的数据与数据库中的相同
 	groupDb, err := dao.RS.QueryGroup(groupID)
 	if err != nil {
 		logrus.Fatalf("[GetUpdatedGroup] QueryGroup %+v", err)
-		return nil
-	}
-	groupMap := GetGroup(groupID)
-	if groupMap != nil {
-		groupDb.Members = groupMap.Members
+		return nil, err
 	}
 	group := &Group{}
 	group.Group = groupDb
 
-	if group.UserNum != int32(len(*group.Members)) {
-		//不相等, 需要更新
-		members, err := dao.RS.GetGroupUsers(groupID)
-		if err != nil {
-			logrus.Fatalf("[UpdateGroup] GetGroupUsers %+v", err)
-			return group
-		}
-		group.Members = members
-	}
+	// members, err := dao.RS.GetGroupUsers(groupID)
+	// if err != nil {
+	// 	logrus.Fatalf("[UpdateGroup] GetGroupUsers %+v", err)
+	// 	return group, err
+	// }
 	//更新map中的group
 	SetGroup(groupID, group)
-	return group
+	return group, nil
 }

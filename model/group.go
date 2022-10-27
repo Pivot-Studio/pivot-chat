@@ -11,7 +11,6 @@ type Group struct {
 	CreateTime   time.Time // 创建时间
 	UpdateTime   time.Time // 更新时间
 	MaxSeq       int64
-	Members      *[]GroupUser `gorm:"-"` // 群组成员
 }
 
 type GroupUser struct {
