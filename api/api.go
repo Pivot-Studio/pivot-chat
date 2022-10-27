@@ -9,7 +9,8 @@ func useRouter(r *gin.Engine) {
 	{
 		user := api.Group("/user")
 		{
-			user.POST("/register", nil)
+			user.POST("/register", Register)
+			user.GET("/email", Email)
 			user.POST("/chgPwd", ChgPwd)
 		}
 	}

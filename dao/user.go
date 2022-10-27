@@ -6,6 +6,7 @@ import (
 )
 
 func (rs *RdbService) CreateUser(user []*model.User) error {
+
 	return rs.tx.Create(&user).Error
 }
 
@@ -65,4 +66,9 @@ func (rs *RdbService) ChangeUserName(user *model.User, newUserName string) (err 
 	}
 
 	return nil
+}
+
+func (rs *RdbService) GetUserByEmail(user *model.User, Email string) error {
+	user = &model.User{}
+	return rs.tx.Table("users").Where("email = ?", Email).First(user).Error
 }

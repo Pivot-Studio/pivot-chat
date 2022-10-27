@@ -22,6 +22,10 @@ type chgPwdParam struct {
 	UserName string `form:"username" binding:"required"`
 }
 
+type emailParam struct {
+	Email string `form:"email" binding:"required"`
+}
+
 func ChgPwd(ctx *gin.Context) {
 	p := &chgPwdParam{}
 	err := ctx.ShouldBind(p)
@@ -68,6 +72,7 @@ func Register(ctx *gin.Context) {
 		})
 		return
 	}
+
 	passwordHash, err := util.EncodePassword(p.Password)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -90,5 +95,27 @@ func Register(ctx *gin.Context) {
 	}
 	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
 		"msg": "注册成功",
+	})
+}
+
+func Email(ctx *gin.Context) {
+	p := &emailParam{}
+	err := ctx.ShouldBind(p)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "[Email]:" + err.Error(),
+		})
+		return
+	}
+	code := service.CreatCode()
+	err = service.SendEmail(ctx, p.Email, code)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "[Email]:" + err.Error(),
+		})
+		return
+	}
+	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+		"msg": "发送验证码成功",
 	})
 }
