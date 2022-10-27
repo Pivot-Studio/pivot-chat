@@ -123,8 +123,7 @@ func wsHandler(ctx *gin.Context) {
 	// 		Email:    user.Email,
 	// 	},
 	// })
-	ack, _ := json.Marshal("login success!")
-	err = conn.Send(ack, service.PackageType(PackageType_PT_SIGN_IN))
+	err = conn.Send([]byte("ack:login success!"), service.PackageType(PackageType_PT_SIGN_IN))
 	if err != nil {
 		logrus.Errorf("[wsHandler] Send login ack failed, %+v", err)
 		service.DeleteConn(user.UserId) // 出现差错就从map里删除
