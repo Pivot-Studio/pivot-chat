@@ -21,9 +21,9 @@ type registerParam struct {
 	Captcha  string `form:"captcha" binding:"required"`
 }
 type chgPwdParam struct {
-	OldPwd   string `form:"oldpwd" binding:"required"`
-	NewPwd   string `form:"newpwd" binding:"required"`
-	UserName string `form:"username" binding:"required"`
+	OldPwd string `form:"oldpwd" binding:"required"`
+	NewPwd string `form:"newpwd" binding:"required"`
+	Email  string `form:"email" binding:"required"`
 }
 
 type emailParam struct {
@@ -48,7 +48,7 @@ func ChgPwd(ctx *gin.Context) {
 		})
 		return
 	}
-	err = service.ChgPwd(ctx, p.UserName, p.OldPwd, passwordHash)
+	err = service.ChgPwd(ctx, p.Email, p.OldPwd, passwordHash)
 
 	if err != nil {
 		logrus.Errorf("[chgPwd] %+v", err)
@@ -58,7 +58,7 @@ func ChgPwd(ctx *gin.Context) {
 		return
 	}
 	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
-		"meg": "修改密码成功",
+		"msg": "修改密码成功",
 	})
 }
 
