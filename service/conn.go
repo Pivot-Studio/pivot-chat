@@ -22,12 +22,13 @@ type Package struct {
 }
 
 const (
-	PackageType_PT_ERR   PackageType = 0
+	PackageType_PT_ERR       PackageType = 0
 	PackageType_PT_UNKNOWN   PackageType = 0
 	PackageType_PT_SIGN_IN   PackageType = 1
 	PackageType_PT_SYNC      PackageType = 2
 	PackageType_PT_HEARTBEAT PackageType = 3
 	PackageType_PT_MESSAGE   PackageType = 4
+	PackageType_PT_JOINGROUP PackageType = 5
 )
 
 func (c *Conn) Send(data []byte, t PackageType) error {

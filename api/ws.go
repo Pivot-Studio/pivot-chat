@@ -36,12 +36,13 @@ type LoginInfo struct {
 }
 
 const (
-	PackageType_PT_ERR   PackageType = 0
+	PackageType_PT_ERR       PackageType = 0
 	PackageType_PT_UNKNOWN   PackageType = 0
 	PackageType_PT_SIGN_IN   PackageType = 1
 	PackageType_PT_SYNC      PackageType = 2
 	PackageType_PT_HEARTBEAT PackageType = 3
 	PackageType_PT_MESSAGE   PackageType = 4
+	PackageType_PT_JOINGROUP PackageType = 5
 )
 
 type PackageType int
@@ -131,6 +132,9 @@ func HandlePackage(bytes []byte, conn *service.Conn) {
 	case PackageType_PT_MESSAGE:
 		fmt.Println("MESSAGE")
 		err = Message(input.Data)
+	case PackageType_PT_JOINGROUP:
+		fmt.Println("JOINGROUP")
+		err = UserJoinGroup(input.Data)
 	default:
 		logrus.Info("SWITCH OTHER")
 	}
@@ -142,7 +146,7 @@ func HandlePackage(bytes []byte, conn *service.Conn) {
 	}
 }
 
-func Message(data []byte) error{
+func Message(data []byte) error {
 	meg := model.GroupMessageInput{}
 	err := json.Unmarshal(data, &meg)
 	if err != nil {
@@ -152,7 +156,7 @@ func Message(data []byte) error{
 	return HandleGroupMessage(&meg)
 }
 
-func Sync(data []byte) error{
+func Sync(data []byte) error {
 	meg := model.GroupMessageSyncInput{}
 	err := json.Unmarshal(data, &meg)
 	if err != nil {
@@ -160,4 +164,14 @@ func Sync(data []byte) error{
 		return err
 	}
 	return HandleSync(&meg)
+}
+
+func UserJoinGroup(data []byte) error {
+	meg := model.UserJoinGroupInput{}
+	err := json.Unmarshal(data, &meg)
+	if err != nil {
+		logrus.Errorf("[Message] json unmarshal %+v", err)
+		return err
+	}
+	return HandleJoinGroup(&meg)
 }

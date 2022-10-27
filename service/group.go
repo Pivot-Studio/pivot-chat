@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"sync"
 	"time"
 
@@ -18,12 +19,11 @@ type Group struct {
 
 var lock sync.Mutex
 
-
 type SendInfo struct {
-	SenderId    int64  // 用户id
-	SenderType  int64  // 发送者身份
-	Message     string // 消息内容
-	ReceiverId  int64  // 群组id
+	SenderId   int64  // 用户id
+	SenderType int64  // 发送者身份
+	Message    string // 消息内容
+	ReceiverId int64  // 群组id
 }
 
 const (
@@ -90,7 +90,12 @@ func SendMessage(sendInfo *model.GroupMessageInput) error { // 进入这里时�
 		// }
 		user0 := user
 		go func() {
-			output := model.GroupMessageOutput{ 
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Println("Recovered. Error:\n", r)
+				}
+			}()
+			output := model.GroupMessageOutput{
 				UserId:   user0.UserId,
 				GroupId:  g.GroupId,
 				Data:     sendInfo.Data,
@@ -112,17 +117,45 @@ func SendMessage(sendInfo *model.GroupMessageInput) error { // 进入这里时�
 	return nil
 }
 
-// func HandleGroupMessage(meg *model.Message) {
-// 	if !dao.RS.ExistGroup(meg.ReceiverId) {
-// 		return
-// 	}
-// 	group := GetUpdatedGroup(meg.ReceiverId)
-// 	err := group.SendMessage(SendInfo{
-// 		SenderId:     meg.SenderId,
-// 		Message:    string(meg.Content),
-// 		SenderType: meg.SenderType,
-// 	})
-// 	if err != nil {
-// 		logrus.Fatalf("[HandleGroupMessage] SendMessage %+v", err)
-// 	}
-// }
+func UserJoinGroup(input *model.UserJoinGroupInput) error {
+	lock.Lock()
+	defer lock.Unlock()
+	g, err := GetUpdatedGroup(input.GroupId) // 这肯定是最新的，而且是一次
+	if err != nil {
+		return err
+	}
+	groupUser := model.GroupUser{
+		UserId:     input.UserId,
+		MemberType: model.SPEAKER,
+		Status:     0,
+		CreateTime: time.Now(),
+		UpdateTime: time.Now(),
+	}
+	err = dao.RS.CreateGroupUser([]*model.GroupUser{&groupUser})
+	if err != nil {
+		return err
+	}
+	err = dao.RS.IncrGroupUserNum(g.GroupId)
+	if err != nil {
+		return err
+	}
+	output := model.UserJoinGroupOutput{
+		UserId:       input.UserId,
+		GroupId:      g.GroupId,
+		Name:         g.Name,
+		Introduction: g.Introduction,
+		UserNum:      g.UserNum,
+		CreateTime:   g.CreateTime,
+	}
+	bytes, err := json.Marshal(output)
+	if err != nil {
+		logrus.Fatalf("[Service] | conn-manager json Marshal err:", err)
+		return err
+	}
+	err = SendToUser(input.UserId, bytes, PackageType_PT_JOINGROUP)
+	if err != nil {
+		logrus.Fatalf("[Service] | UserJoinGroup error:", err)
+		return err
+	}
+	return nil
+}

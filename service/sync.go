@@ -43,7 +43,7 @@ func Sync(input *model.GroupMessageSyncInput) error { // 进入这里时，group
 		UserId:  input.UserId,
 		GroupId: input.GroupId,
 		Data:    groupMessageOutput,
-		MaxSeq:  megs[len(megs) - 1].Seq,
+		MaxSeq:  megs[len(megs)-1].Seq,
 	}
 	bytes, err := json.Marshal(output)
 	if err != nil {

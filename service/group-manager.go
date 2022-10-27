@@ -26,7 +26,6 @@ func DeleteGroup(groupID int64) {
 
 // GetUpdatedGroup 得到最新的group
 func GetUpdatedGroup(groupID int64) (*Group, error) {
-	//总是保持除member之外的数据与数据库中的相同
 	groupDb, err := dao.RS.QueryGroup(groupID)
 	if err != nil {
 		logrus.Fatalf("[GetUpdatedGroup] QueryGroup %+v", err)
