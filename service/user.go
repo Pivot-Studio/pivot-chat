@@ -50,7 +50,7 @@ func CreatCode() (code string) {
 }
 
 // 发送验证码
-func SendEmail(ctx *gin.Context, email string, captcha string) (err error) {
+func SendEmail(ctx context.Context, email string, captcha string) (err error) {
 	m := gomail.NewMessage()
 	m.SetHeader("From", conf.C.EmailServer.Email)
 	m.SetHeader("To", email)

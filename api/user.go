@@ -1,10 +1,13 @@
 package api
 
 import (
-	"github.com/sirupsen/logrus"
+	"context"
 	"net/http"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
+	"github.com/Pivot-Studio/pivot-chat/dao"
 	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/Pivot-Studio/pivot-chat/service"
 	"github.com/Pivot-Studio/pivot-chat/util"
@@ -117,7 +120,12 @@ func Email(ctx *gin.Context) {
 		return
 	}
 	code := service.CreatCode()
-	err = service.SendEmail(ctx, p.Email, code)
+	err = dao.Cache.Set(context.Background(), p.Email, code, time.Minute*30).Err()
+	go func() {
+		emailctx, canal := context.WithTimeout(context.TODO(), 3*time.Second)
+		defer canal()
+		err = service.SendEmail(emailctx, p.Email, code)
+	}()
 	if err != nil {
 		logrus.Errorf("[Email] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
