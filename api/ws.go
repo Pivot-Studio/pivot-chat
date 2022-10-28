@@ -187,7 +187,7 @@ func HandlePackage(bytes []byte, conn *service.Conn) {
 func Message(data map[string]interface{}, userId int64) error {
 	meg := model.GroupMessageInput{
 		UserId:  userId,
-		GroupId: data["group_id"].(int64),
+		GroupId: int64(data["group_id"].(float64)),
 		Data:    data["data"].(string),
 	}
 	// err := json.Unmarshal(data, &meg)
@@ -202,8 +202,8 @@ func Message(data map[string]interface{}, userId int64) error {
 func Sync(data map[string]interface{}, userId int64) error {
 	meg := model.GroupMessageSyncInput{
 		UserId:  userId,
-		GroupId: data["group_id"].(int64),
-		SyncSeq: data["sync_seq"].(int64),
+		GroupId: int64(data["group_id"].(float64)),
+		SyncSeq: int64(data["sync_seq"].(float64)),
 	}
 	// err := json.Unmarshal([]byte(data), &meg)
 	// if err != nil {
@@ -217,7 +217,7 @@ func Sync(data map[string]interface{}, userId int64) error {
 func UserJoinGroup(data map[string]interface{}, userId int64) error {
 	meg := model.UserJoinGroupInput{
 		UserId:  userId,
-		GroupId: data["group_id"].(int64),
+		GroupId: int64(data["group_id"].(float64)),
 	}
 	// err := json.Unmarshal(data, &meg)
 	// if err != nil {
