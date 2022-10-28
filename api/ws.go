@@ -125,7 +125,7 @@ func wsHandler(ctx *gin.Context) {
 	// 	},
 	// })
 
-	err = conn.Send("login success!\nwaiting for package...", service.PackageType(PackageType_PT_SIGN_IN))
+	err = conn.Send("login success! waiting for package...", service.PackageType(PackageType_PT_SIGN_IN))
 	if err != nil {
 		logrus.Errorf("[wsHandler] Send login ack failed, %+v", err)
 		service.DeleteConn(user.UserId) // 出现差错就从map里删除
