@@ -19,7 +19,7 @@ func (rs *RdbService) IncrGroupUserNum(groupID int64) (err error) {
 
 func (rs *RdbService) ExistGroup(groupID int64) bool {
 	return rs.tx.Table("groups").Where("group_id = ?", groupID).
-		Take(model.Group{}).Error != gorm.ErrRecordNotFound
+		Take(&model.Group{}).Error != gorm.ErrRecordNotFound
 }
 
 func (rs *RdbService) QueryGroup(groupID int64) (*model.Group, error) {

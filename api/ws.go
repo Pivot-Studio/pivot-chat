@@ -155,7 +155,7 @@ func HandlePackage(bytes []byte, conn *service.Conn) {
 		conn.Send(err.Error(), service.PackageType(PackageType_PT_ERR))
 		return
 	}
-	fmt.Printf("%+v", input)
+	fmt.Printf("%+v\n", input)
 	//分类型处理
 	//TODO
 	switch input.Type {
