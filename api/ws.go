@@ -58,7 +58,7 @@ type PackageType int
 type Package struct {
 	//数据包内容, 按需修改
 	Type PackageType `json:"type"`
-	Data []byte      `json:"data"`
+	Data interface{} `json:"data"`
 	// Data string `json:"data"`
 }
 
@@ -125,20 +125,7 @@ func wsHandler(ctx *gin.Context) {
 	// 	},
 	// })
 
-	reps := LoginResponse{
-		Msg: "连接成功",
-		data: struct {
-			Username string `json:"username"`
-			UserId   int64  `json:"user_id"`
-			Email    string `json:"email"`
-		}{
-			Username: "user.UserName",
-			UserId:   114514,
-			Email:    "user.Email",
-		},
-	}
-	bytes, _ := json.Marshal(reps)
-	err = conn.Send(bytes, service.PackageType(PackageType_PT_SIGN_IN))
+	err = conn.Send("login success!\nwaiting for package...", service.PackageType(PackageType_PT_SIGN_IN))
 	if err != nil {
 		logrus.Errorf("[wsHandler] Send login ack failed, %+v", err)
 		service.DeleteConn(user.UserId) // 出现差错就从map里删除
@@ -165,8 +152,7 @@ func HandlePackage(bytes []byte, conn *service.Conn) {
 	if err != nil {
 		logrus.Errorf("[HandlePackage] json unmarshal %+v", err)
 		//TODO: release连接
-		bytesErr, _ := json.Marshal(err.Error())
-		conn.Send(bytesErr, service.PackageType(PackageType_PT_ERR))
+		conn.Send(err.Error(), service.PackageType(PackageType_PT_ERR))
 		return
 	}
 
@@ -179,55 +165,65 @@ func HandlePackage(bytes []byte, conn *service.Conn) {
 		fmt.Println("SIGN_IN")
 	case PackageType_PT_SYNC:
 		fmt.Println("SYNC")
-		err = Sync(input.Data, conn.UserId)
+		err = Sync(input.Data.(map[string]interface{}), conn.UserId)
 	case PackageType_PT_HEARTBEAT:
 		fmt.Println("HEARTBEAT")
 	case PackageType_PT_MESSAGE:
 		fmt.Println("MESSAGE")
-		err = Message(input.Data, conn.UserId)
+		err = Message(input.Data.(map[string]interface{}), conn.UserId)
 	case PackageType_PT_JOINGROUP:
 		fmt.Println("JOINGROUP")
-		err = UserJoinGroup(input.Data, conn.UserId)
+		err = UserJoinGroup(input.Data.(map[string]interface{}), conn.UserId)
 	default:
 		logrus.Info("SWITCH OTHER")
 	}
 	if err != nil {
 		fmt.Println(err)
-		bytesErr, _ := json.Marshal(err.Error())
-		conn.Send(bytesErr, service.PackageType(PackageType_PT_ERR))
+		conn.Send(err.Error(), service.PackageType(PackageType_PT_ERR))
 		return
 	}
 }
 
-func Message(data []byte, userId int64) error {
-	meg := model.GroupMessageInput{}
-	err := json.Unmarshal(data, &meg)
-	if err != nil {
-		logrus.Errorf("[Message] json unmarshal %+v", err)
-		return err
+func Message(data map[string]interface{}, userId int64) error {
+	meg := model.GroupMessageInput{
+		UserId:  userId,
+		GroupId: data["group_id"].(int64),
+		Data:    data["data"].(string),
 	}
-	meg.UserId = userId
+	// err := json.Unmarshal(data, &meg)
+	// if err != nil {
+	// 	logrus.Errorf("[Message] json unmarshal %+v", err)
+	// 	return err
+	// }
+	// meg.UserId = userId
 	return HandleGroupMessage(&meg)
 }
 
-func Sync(data []byte, userId int64) error {
-	meg := model.GroupMessageSyncInput{}
-	err := json.Unmarshal([]byte(data), &meg)
-	if err != nil {
-		logrus.Errorf("[Message] json unmarshal %+v", err)
-		return err
+func Sync(data map[string]interface{}, userId int64) error {
+	meg := model.GroupMessageSyncInput{
+		UserId:  userId,
+		GroupId: data["group_id"].(int64),
+		SyncSeq: data["sync_seq"].(int64),
 	}
-	meg.UserId = userId
+	// err := json.Unmarshal([]byte(data), &meg)
+	// if err != nil {
+	// 	logrus.Errorf("[Message] json unmarshal %+v", err)
+	// 	return err
+	// }
+	// meg.UserId = userId
 	return HandleSync(&meg)
 }
 
-func UserJoinGroup(data []byte, userId int64) error {
-	meg := model.UserJoinGroupInput{}
-	err := json.Unmarshal(data, &meg)
-	if err != nil {
-		logrus.Errorf("[Message] json unmarshal %+v", err)
-		return err
+func UserJoinGroup(data map[string]interface{}, userId int64) error {
+	meg := model.UserJoinGroupInput{
+		UserId:  userId,
+		GroupId: data["group_id"].(int64),
 	}
-	meg.UserId = userId
+	// err := json.Unmarshal(data, &meg)
+	// if err != nil {
+	// 	logrus.Errorf("[Message] json unmarshal %+v", err)
+	// 	return err
+	// }
+	// meg.UserId = userId
 	return HandleJoinGroup(&meg)
 }

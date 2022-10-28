@@ -18,7 +18,7 @@ type PackageType int
 type Package struct {
 	//数据包内容, 按需修改
 	Type PackageType
-	Data []byte
+	Data interface{}
 }
 
 const (
@@ -31,7 +31,7 @@ const (
 	PackageType_PT_JOINGROUP PackageType = 5
 )
 
-func (c *Conn) Send(data []byte, t PackageType) error {
+func (c *Conn) Send(data interface{}, t PackageType) error {
 	c.WSMutex.Lock()
 	defer c.WSMutex.Unlock()
 	ret := Package{

@@ -1,8 +1,6 @@
 package service
 
 import (
-	"encoding/json"
-
 	"github.com/Pivot-Studio/pivot-chat/constant"
 	"github.com/Pivot-Studio/pivot-chat/dao"
 	"github.com/Pivot-Studio/pivot-chat/model"
@@ -45,11 +43,7 @@ func Sync(input *model.GroupMessageSyncInput) error { // 进入这里时，group
 		Data:    groupMessageOutput,
 		MaxSeq:  megs[len(megs)-1].Seq,
 	}
-	bytes, err := json.Marshal(output)
-	if err != nil {
-		return err
-	}
-	err = SendToUser(input.UserId, bytes, PackageType_PT_SYNC)
+	err = SendToUser(input.UserId, output, PackageType_PT_SYNC)
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -102,12 +101,7 @@ func SendMessage(sendInfo *model.GroupMessageInput) error { // 进入这里时�
 				SenderId: sendInfo.UserId,
 				Seq:      g.MaxSeq + 1,
 			}
-			bytes, err := json.Marshal(output)
-			if err != nil {
-				logrus.Fatalf("[Service] | conn-manager json Marshal err:", err)
-				return
-			}
-			err = SendToUser(user0.UserId, bytes, PackageType_PT_MESSAGE)
+			err = SendToUser(user0.UserId, output, PackageType_PT_MESSAGE)
 			if err != nil {
 				logrus.Fatalf("[Service] | group sendmeg error:", err)
 				return
@@ -148,12 +142,7 @@ func UserJoinGroup(input *model.UserJoinGroupInput) error {
 		UserNum:      g.UserNum,
 		CreateTime:   g.CreateTime,
 	}
-	bytes, err := json.Marshal(output)
-	if err != nil {
-		logrus.Fatalf("[Service] | conn-manager json Marshal err:", err)
-		return err
-	}
-	err = SendToUser(input.UserId, bytes, PackageType_PT_JOINGROUP)
+	err = SendToUser(input.UserId, output, PackageType_PT_JOINGROUP)
 	if err != nil {
 		logrus.Fatalf("[Service] | UserJoinGroup error:", err)
 		return err
