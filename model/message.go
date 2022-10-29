@@ -9,6 +9,8 @@ type Message struct {
 	Content    string    // 消息内容
 	Seq        int64     `gorm:"unique_index:u_meg"` // 消息同步序列
 	SendTime   time.Time // 消息发送时间（落库时间）
+	Type       int64
+	ReplyTo    int64
 }
 
 type GroupMessageSyncInput struct {

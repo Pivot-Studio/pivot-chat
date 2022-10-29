@@ -17,6 +17,8 @@ type GroupMessageInput struct {
 	UserId  int64  `json:"user_id4"`  // 发送人userid
 	GroupId int64  `json:"group_id4"` // 群组id
 	Data    string `json:"data4"`
+	ReplyTo int64  `json:"reply_to4"`
+	Type    int64  `json:"type4"`
 }
 
 type GroupMessageOutput struct {
@@ -25,4 +27,6 @@ type GroupMessageOutput struct {
 	Data     string `json:"data"`
 	SenderId int64  `json:"sender_id"` // 发送者账户id
 	Seq      int64  `json:"seq"`       // 该条消息的正确seq
+	ReplyTo  int64  `json:"reply_to"`
+	Type     int64  `json:"type"`
 }

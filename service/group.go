@@ -68,6 +68,8 @@ func SendMessage(sendInfo *model.GroupMessageInput) error { // 进入这里时�
 		Content:    sendInfo.Data,
 		Seq:        g.MaxSeq + 1,
 		SendTime:   time.Now(),
+		Type:       sendInfo.Type,
+		ReplyTo:    sendInfo.ReplyTo,
 	}
 	err = dao.RS.CreateMessage([]*model.Message{&meg})
 	if err != nil {
@@ -88,25 +90,27 @@ func SendMessage(sendInfo *model.GroupMessageInput) error { // 进入这里时�
 		// 	continue
 		// }
 		user0 := user
-		go func() {
+		go func(user *model.GroupUser, sendInfo *model.GroupMessageInput) {
 			defer func() {
 				if r := recover(); r != nil {
 					fmt.Println("Recovered. Error:\n", r)
 				}
 			}()
 			output := model.GroupMessageOutput{
-				UserId:   user0.UserId,
+				UserId:   user.UserId,
 				GroupId:  g.GroupId,
 				Data:     sendInfo.Data,
 				SenderId: sendInfo.UserId,
 				Seq:      g.MaxSeq + 1,
+				ReplyTo:  sendInfo.ReplyTo,
+				Type:     sendInfo.Type,
 			}
-			err = SendToUser(user0.UserId, output, PackageType_PT_MESSAGE)
+			err = SendToUser(user.UserId, output, PackageType_PT_MESSAGE)
 			if err != nil {
 				logrus.Fatalf("[Service] | group sendmeg error:", err)
 				return
 			}
-		}()
+		}(&user0, sendInfo)
 	}
 	return nil
 }
