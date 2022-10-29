@@ -178,6 +178,7 @@ func HandlePackage(bytes []byte, conn *service.Conn) {
 
 func Message(data model.GroupMessageInput, userId int64) error {
 	data.UserId = userId
+	fmt.Printf("%+v\n", data)
 	// err := json.Unmarshal(data, &meg)
 	// if err != nil {
 	// 	logrus.Errorf("[Message] json unmarshal %+v", err)
@@ -189,6 +190,7 @@ func Message(data model.GroupMessageInput, userId int64) error {
 
 func Sync(data model.GroupMessageSyncInput, userId int64) error {
 	data.UserId = userId
+	fmt.Printf("%+v\n", data)
 	// err := json.Unmarshal([]byte(data), &meg)
 	// if err != nil {
 	// 	logrus.Errorf("[Message] json unmarshal %+v", err)
@@ -200,6 +202,7 @@ func Sync(data model.GroupMessageSyncInput, userId int64) error {
 
 func UserJoinGroup(data model.UserJoinGroupInput, userId int64) error {
 	data.UserId = userId
+	fmt.Printf("%+v\n", data)
 	// err := json.Unmarshal(data, &meg)
 	// if err != nil {
 	// 	logrus.Errorf("[Message] json unmarshal %+v", err)
