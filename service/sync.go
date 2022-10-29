@@ -35,6 +35,9 @@ func Sync(input *model.GroupMessageSyncInput) error { // 进入这里时，group
 			Data:     meg.Content,
 			SenderId: meg.SenderId,
 			Seq:      meg.Seq,
+			ReplyTo:  meg.ReplyTo,
+			Type:     meg.Type,
+			Time:     meg.SendTime,
 		})
 	}
 	output := model.GroupMessageSyncOutput{
