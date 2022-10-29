@@ -19,8 +19,8 @@ const (
 )
 
 type UserJoinGroupInput struct {
-	UserId  int64 `json:"user_id"` // 发送人userid
-	GroupId int64 `json:"group_id"`
+	UserId  int64 `json:"user_id5"` // 发送人userid
+	GroupId int64 `json:"group_id5"`
 }
 
 type UserJoinGroupOutput struct {

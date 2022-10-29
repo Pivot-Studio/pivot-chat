@@ -14,9 +14,9 @@ type Group struct {
 }
 
 type GroupMessageInput struct {
-	UserId  int64  `json:"user_id"`  // 发送人userid
-	GroupId int64  `json:"group_id"` // 群组id
-	Data    string `json:"data"`
+	UserId  int64  `json:"user_id4"`  // 发送人userid
+	GroupId int64  `json:"group_id4"` // 群组id
+	Data    string `json:"data4"`
 }
 
 type GroupMessageOutput struct {

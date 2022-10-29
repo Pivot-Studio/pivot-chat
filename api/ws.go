@@ -35,14 +35,15 @@ type LoginInfo struct {
 	//DeviceId int64  `json:"device_id"`
 	//AppId    int64  `json:"appid"`
 }
-type LoginResponse struct {
-	Msg  string `json:"msg"`
-	data struct {
-		Username string `json:"username"`
-		UserId   int64  `json:"user_id"`
-		Email    string `json:"email"`
-	}
-}
+
+// type LoginResponse struct {
+// 	Msg  string `json:"msg"`
+// 	data struct {
+// 		Username string `json:"username"`
+// 		UserId   int64  `json:"user_id"`
+// 		Email    string `json:"email"`
+// 	}
+// }
 
 const (
 	PackageType_PT_ERR       PackageType = 0
@@ -54,13 +55,18 @@ const (
 	PackageType_PT_JOINGROUP PackageType = 5
 )
 
-type PackageType int
-type Package struct {
-	//数据包内容, 按需修改
-	Type PackageType `json:"type"`
-	Data interface{} `json:"data"`
-	// Data string `json:"data"`
-}
+type (
+	PackageType int
+	Package     struct {
+		Type PackageType `json:"type"`
+		Data Input       `json:"data"`
+	}
+	Input struct {
+		model.GroupMessageInput
+		model.GroupMessageSyncInput
+		model.UserJoinGroupInput
+	}
+)
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -111,20 +117,6 @@ func wsHandler(ctx *gin.Context) {
 	conn.UserId = user.UserId
 	service.SetConn(user.UserId, &conn)
 
-	//给前端返回信息
-	// ctx.JSON(http.StatusOK, LoginResponse{
-	// 	Msg: "连接成功",
-	// 	data: struct {
-	// 		Username string `json:"username"`
-	// 		UserId   int64  `json:"user_id"`
-	// 		Email    string `json:"email"`
-	// 	}{
-	// 		Username: user.UserName,
-	// 		UserId:   user.UserId,
-	// 		Email:    user.Email,
-	// 	},
-	// })
-
 	err = conn.Send("login success! waiting for package...", service.PackageType(PackageType_PT_SIGN_IN))
 	if err != nil {
 		logrus.Errorf("[wsHandler] Send login ack failed, %+v", err)
@@ -165,15 +157,15 @@ func HandlePackage(bytes []byte, conn *service.Conn) {
 		fmt.Println("SIGN_IN")
 	case PackageType_PT_SYNC:
 		fmt.Println("SYNC")
-		err = Sync(input.Data.(map[string]interface{}), conn.UserId)
+		err = Sync(input.Data.GroupMessageSyncInput, conn.UserId)
 	case PackageType_PT_HEARTBEAT:
 		fmt.Println("HEARTBEAT")
 	case PackageType_PT_MESSAGE:
 		fmt.Println("MESSAGE")
-		err = Message(input.Data.(map[string]interface{}), conn.UserId)
+		err = Message(input.Data.GroupMessageInput, conn.UserId)
 	case PackageType_PT_JOINGROUP:
 		fmt.Println("JOINGROUP")
-		err = UserJoinGroup(input.Data.(map[string]interface{}), conn.UserId)
+		err = UserJoinGroup(input.Data.UserJoinGroupInput, conn.UserId)
 	default:
 		logrus.Info("SWITCH OTHER")
 	}
@@ -184,46 +176,35 @@ func HandlePackage(bytes []byte, conn *service.Conn) {
 	}
 }
 
-func Message(data map[string]interface{}, userId int64) error {
-	meg := model.GroupMessageInput{
-		UserId:  userId,
-		GroupId: int64(data["group_id"].(float64)),
-		Data:    data["data"].(string),
-	}
+func Message(data model.GroupMessageInput, userId int64) error {
+	data.UserId = userId
 	// err := json.Unmarshal(data, &meg)
 	// if err != nil {
 	// 	logrus.Errorf("[Message] json unmarshal %+v", err)
 	// 	return err
 	// }
 	// meg.UserId = userId
-	return HandleGroupMessage(&meg)
+	return HandleGroupMessage(&data)
 }
 
-func Sync(data map[string]interface{}, userId int64) error {
-	meg := model.GroupMessageSyncInput{
-		UserId:  userId,
-		GroupId: int64(data["group_id"].(float64)),
-		SyncSeq: int64(data["sync_seq"].(float64)),
-	}
+func Sync(data model.GroupMessageSyncInput, userId int64) error {
+	data.UserId = userId
 	// err := json.Unmarshal([]byte(data), &meg)
 	// if err != nil {
 	// 	logrus.Errorf("[Message] json unmarshal %+v", err)
 	// 	return err
 	// }
 	// meg.UserId = userId
-	return HandleSync(&meg)
+	return HandleSync(&data)
 }
 
-func UserJoinGroup(data map[string]interface{}, userId int64) error {
-	meg := model.UserJoinGroupInput{
-		UserId:  userId,
-		GroupId: int64(data["group_id"].(float64)),
-	}
+func UserJoinGroup(data model.UserJoinGroupInput, userId int64) error {
+	data.UserId = userId
 	// err := json.Unmarshal(data, &meg)
 	// if err != nil {
 	// 	logrus.Errorf("[Message] json unmarshal %+v", err)
 	// 	return err
 	// }
 	// meg.UserId = userId
-	return HandleJoinGroup(&meg)
+	return HandleJoinGroup(&data)
 }
