@@ -62,12 +62,13 @@ func SendMessage(sendInfo *model.GroupMessageInput) error { // 进入这里时�
 		return constant.UserNotMatchGroup
 	}
 	// 持久化
+	current_time := time.Now()
 	meg := model.Message{
 		SenderId:   sendInfo.UserId,
 		ReceiverId: sendInfo.GroupId,
 		Content:    sendInfo.Data,
 		Seq:        g.MaxSeq + 1,
-		SendTime:   time.Now(),
+		SendTime:   current_time,
 		Type:       sendInfo.Type,
 		ReplyTo:    sendInfo.ReplyTo,
 	}
@@ -90,7 +91,7 @@ func SendMessage(sendInfo *model.GroupMessageInput) error { // 进入这里时�
 		// 	continue
 		// }
 		user0 := user
-		go func(user *model.GroupUser, sendInfo *model.GroupMessageInput) {
+		go func(user *model.GroupUser, sendInfo *model.GroupMessageInput, current_time time.Time) {
 			defer func() {
 				if r := recover(); r != nil {
 					fmt.Println("Recovered. Error:\n", r)
@@ -104,13 +105,14 @@ func SendMessage(sendInfo *model.GroupMessageInput) error { // 进入这里时�
 				Seq:      g.MaxSeq + 1,
 				ReplyTo:  sendInfo.ReplyTo,
 				Type:     sendInfo.Type,
+				Time:     current_time,
 			}
 			err = SendToUser(user.UserId, output, PackageType_PT_MESSAGE)
 			if err != nil {
 				logrus.Fatalf("[Service] | group sendmeg error:", err)
 				return
 			}
-		}(&user0, sendInfo)
+		}(&user0, sendInfo, current_time)
 	}
 	return nil
 }
@@ -122,13 +124,14 @@ func UserJoinGroup(input *model.UserJoinGroupInput) error {
 	if err != nil {
 		return err
 	}
+	current_time := time.Now()
 	groupUser := model.GroupUser{
 		GroupId:    input.GroupId,
 		UserId:     input.UserId,
 		MemberType: model.SPEAKER,
 		Status:     0,
-		CreateTime: time.Now(),
-		UpdateTime: time.Now(),
+		CreateTime: current_time,
+		UpdateTime: current_time,
 	}
 	err = dao.RS.CreateGroupUser([]*model.GroupUser{&groupUser})
 	if err != nil {
