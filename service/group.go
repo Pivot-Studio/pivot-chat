@@ -57,7 +57,7 @@ func SendMessage(sendInfo *model.GroupMessageInput) error { // 进入这里时�
 		return err
 	}
 
-	if !IsMember(sendInfo.UserId, members) {
+	if !IsMember(sendInfo.UserId, *members) {
 		logrus.Fatalf("[Service] | group sendmeg error: user isn't in group | sendInfo:", sendInfo)
 		return constant.UserNotMatchGroup
 	}
@@ -84,7 +84,7 @@ func SendMessage(sendInfo *model.GroupMessageInput) error { // 进入这里时�
 	}
 
 	// 将消息发送给群组用户
-	for _, user := range members {
+	for _, user := range *members {
 		// 前面已经发送过，这里不需要再发送
 		// if sendInfo.SenderType == SenderType_USER && user.UserId == sendInfo.SenderId {
 		// 	continue

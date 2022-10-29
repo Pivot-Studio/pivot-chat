@@ -18,7 +18,7 @@ type Group_ struct {
 	sync.Mutex
 }
 type GroupOperator struct {
-	Groups    *[]Group_
+	Groups    []*Group_
 	GroupsMap sync.Map
 	lock      sync.Mutex
 }
@@ -74,19 +74,24 @@ func (gpo *GroupOperator) GetGroup(groupID int64) (*Group_, error) {
 
 	return g, nil
 }
+
+// SendGroupMessage 群发消息, 无锁
 func (g *Group_) SendGroupMessage(sendInfo *model.GroupMessageInput, seq int64) {
 	// 将消息发送给群组用户
-	// 复制一份以免遍历时改变group导致错误
-	members := *g.Members
+	// 复制一份以免遍历时改变group导致错误, 这里也可以考虑加锁, 但是这样会更快一点
+	var members []model.GroupUser
+	copy(members, *g.Members)
 	for _, user := range members {
-		userID := user.UserId
-		go func() {
+		user0 := user
+		go func(user *model.GroupUser, sendInfo *model.GroupMessageInput) {
 			output := model.GroupMessageOutput{
-				UserId:   userID,
+				UserId:   user0.UserId,
 				GroupId:  g.group.GroupId,
 				Data:     sendInfo.Data,
 				SenderId: sendInfo.UserId,
 				Seq:      seq,
+				ReplyTo:  sendInfo.ReplyTo,
+				Type:     sendInfo.Type,
 			}
 
 			bytes, err := json.Marshal(output)
@@ -95,36 +100,78 @@ func (g *Group_) SendGroupMessage(sendInfo *model.GroupMessageInput, seq int64) 
 				return
 			}
 
-			err = SendToUser(userID, bytes, PackageType_PT_MESSAGE)
+			err = SendToUser(user0.UserId, bytes, PackageType_PT_MESSAGE)
 			if err != nil {
 				logrus.Fatalf("[service.SendGroupMessage] group SendToUser %+v", err)
 				return
 			}
-		}()
+		}(&user0, sendInfo)
 	}
 }
 
-// JoinGroup todo
-func (gpo *GroupOperator) JoinGroup(groupID int64, user *model.GroupUser) error {
-	g, err := gpo.GetGroup(groupID)
+// UpdateGroup todo 修改群组信息
+func (gpo *GroupOperator) UpdateGroup() {
+
+}
+
+// QuitGroup todo 退出群组
+func (gpo *GroupOperator) QuitGroup() {
+
+}
+
+// JoinGroup 加入群组
+func (gpo *GroupOperator) JoinGroup(input *model.UserJoinGroupInput) error {
+	g, err := gpo.GetGroup(input.GroupId)
 	if err != nil {
 		logrus.Errorf("[service.JoinGroup] GetGroup %+v", err)
 		return err
 	}
 
+	groupUser := model.GroupUser{
+		GroupId:    input.GroupId,
+		UserId:     input.UserId,
+		MemberType: model.SPEAKER,
+		Status:     0,
+		CreateTime: time.Now(),
+		UpdateTime: time.Now(),
+	}
+
 	g.Lock()
-	if g.IsMember(user.UserId) {
+	if g.IsMember(input.UserId) {
 		return nil
 	}
-	//todo
-	*g.Members = append(*g.Members, *user)
+	err = dao.RS.CreateGroupUser([]*model.GroupUser{&groupUser})
+	if err != nil {
+		return err
+	}
+	err = dao.RS.IncrGroupUserNum(g.group.GroupId)
+	if err != nil {
+		return err
+	}
+	//缓存放最后更新, 保证缓存与数据库同步
+	*g.Members = append(*g.Members, groupUser)
 	g.group.UserNum += 1
 
+	//广播通知其他用户
+	output := model.UserJoinGroupOutput{
+		UserId:       input.UserId,
+		GroupId:      g.group.GroupId,
+		Name:         g.group.Name,
+		Introduction: g.group.Introduction,
+		UserNum:      g.group.UserNum,
+		CreateTime:   g.group.CreateTime,
+	}
+	err = SendToUser(input.UserId, output, PackageType_PT_JOINGROUP)
+	if err != nil {
+		g.Unlock()
+		logrus.Fatalf("[Service] UserJoinGroup %+v", err)
+		return err
+	}
 	g.Unlock()
 	return nil
 }
 
-// SaveGroupMessage 持久化群组消息
+// SaveGroupMessage 持久化群组消息, 同时会发送给每一个人
 func (gpo *GroupOperator) SaveGroupMessage(SendInfo *model.GroupMessageInput, g *Group_) error {
 	g, err := gpo.GetGroup(SendInfo.GroupId)
 	if err != nil {
