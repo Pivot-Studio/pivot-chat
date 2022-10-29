@@ -1,0 +1,122 @@
+Index: api/ws.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/api/ws.go b/api/ws.go
+--- a/api/ws.go	
++++ b/api/ws.go	
+@@ -83,7 +83,7 @@
+ 		})
+ 		return
+ 	}
+-
++	//鉴权登录
+ 	if !service.Auth(req.Email, req.Password) {
+ 		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+ 			"msg": "登录失败, 账号密码错误或不匹配",
+@@ -91,7 +91,8 @@
+ 		return
+ 	}
+ 	var err error
+-	// 登录成功, 升级为websocket
++	// 登录成功, 升级为websocket:
++	// 建立用户 - 连接表
+ 	conn := service.Conn{
+ 		WSMutex: sync.Mutex{},
+ 	}
+@@ -111,20 +112,7 @@
+ 	conn.UserId = user.UserId
+ 	service.SetConn(user.UserId, &conn)
+ 
+-	//给前端返回信息
+-	// ctx.JSON(http.StatusOK, LoginResponse{
+-	// 	Msg: "连接成功",
+-	// 	data: struct {
+-	// 		Username string `json:"username"`
+-	// 		UserId   int64  `json:"user_id"`
+-	// 		Email    string `json:"email"`
+-	// 	}{
+-	// 		Username: user.UserName,
+-	// 		UserId:   user.UserId,
+-	// 		Email:    user.Email,
+-	// 	},
+-	// })
+-
++	//给前端返回信息, upgrade之后http已拆除, 不能使用http返回
+ 	err = conn.Send("login success! waiting for package...", service.PackageType(PackageType_PT_SIGN_IN))
+ 	if err != nil {
+ 		logrus.Errorf("[wsHandler] Send login ack failed, %+v", err)
+@@ -138,24 +126,29 @@
+ 		_, data, err := conn.WS.ReadMessage()
+ 		if err != nil {
+ 			logrus.Errorf("[wsHandler] ReadMessage failed, %+v", err)
+-			service.DeleteConn(user.UserId) // 出现差错就从map里删除
++			service.ReleaseConn(user.UserId) // 出现差错就释放连接
+ 			return
+ 		}
+-		HandlePackage(data, &conn)
++		//处理数据包
++		HandlePackage(&data, &conn)
+ 	}
+ }
+ 
+ // HandlePackage 分类型处理数据包
+-func HandlePackage(bytes []byte, conn *service.Conn) {
+-	input := Package{}
+-	err := json.Unmarshal(bytes, &input)
++func HandlePackage(bytes *[]byte, conn *service.Conn) {
++	input := &Package{}
++	err := json.Unmarshal(*bytes, input)
+ 	if err != nil {
+ 		logrus.Errorf("[HandlePackage] json unmarshal %+v", err)
+-		//TODO: release连接
+ 		conn.Send(err.Error(), service.PackageType(PackageType_PT_ERR))
+ 		return
+ 	}
+ 	fmt.Printf("%+v\n", input)
++	if err != nil {
++		logrus.Errorf("[HandlePackage] json Marshal %+v", err)
++		conn.Send(err.Error(), service.PackageType(PackageType_PT_ERR))
++		return
++	}
+ 	//分类型处理
+ 	//TODO
+ 	switch input.Type {
+Index: model/group.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/model/group.go b/model/group.go
+--- a/model/group.go	
++++ b/model/group.go	
+@@ -10,19 +10,23 @@
+ 	UserNum      int32     // 群组人数
+ 	CreateTime   time.Time // 创建时间
+ 	UpdateTime   time.Time // 更新时间
++	ReplyTo      int64
+ 	MaxSeq       int64
+ }
+ 
+ type GroupMessageInput struct {
+ 	UserId  int64  `json:"user_id"`  // 发送人userid
+ 	GroupId int64  `json:"group_id"` // 群组id
++	ReplyTo int64  `json:"reply_to"`
+ 	Data    string `json:"data"`
+ }
+ 
+ type GroupMessageOutput struct {
+-	UserId   int64  `json:"user_id"`  // 接受者user_id
+-	GroupId  int64  `json:"group_id"` // 群组id
+-	Data     string `json:"data"`
+-	SenderId int64  `json:"sender_id"` // 发送者账户id
+-	Seq      int64  `json:"seq"`       // 该条消息的正确seq
++	UserId   int64     `json:"user_id"`  // 接受者user_id
++	GroupId  int64     `json:"group_id"` // 群组id
++	Data     string    `json:"data"`
++	SenderId int64     `json:"sender_id"` // 发送者账户id
++	Seq      int64     `json:"seq"`       // 该条消息的正确seq
++	Time     time.Time `json:"time"`
++	ReplyTo  int64     `json:"reply_to"`
+ }
