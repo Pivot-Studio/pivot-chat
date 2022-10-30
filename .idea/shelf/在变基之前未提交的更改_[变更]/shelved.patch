@@ -1,0 +1,52 @@
+Index: api/ws.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package api\r\n\r\nimport \"C\"\r\nimport (\r\n\t\"encoding/json\"\r\n\t\"fmt\"\r\n\t\"github.com/sirupsen/logrus\"\r\n\t\"net/http\"\r\n\t\"time\"\r\n\r\n\t\"github.com/gin-gonic/gin\"\r\n\t\"github.com/gorilla/websocket\"\r\n)\r\n\r\nconst (\r\n\t//设置ws的超时时间\r\n\twsTimeout = 12 * time.Minute\r\n)\r\n\r\ntype PackageType int\r\ntype Package struct {\r\n\t//数据包内容, 按需修改\r\n\tType PackageType\r\n\tId   int64\r\n\tdata []byte\r\n}\r\ntype WsConnContext struct {\r\n\tConn     *websocket.Conn\r\n\tUserId   int64\r\n\tDeviceId int64\r\n\tAppId    int64\r\n}\r\n\r\nconst (\r\n\tPackageType_PT_UNKNOWN   PackageType = 0\r\n\tPackageType_PT_SIGN_IN   PackageType = 1\r\n\tPackageType_PT_SYNC      PackageType = 2\r\n\tPackageType_PT_HEARTBEAT PackageType = 3\r\n\tPackageType_PT_MESSAGE   PackageType = 4\r\n)\r\n\r\nvar upgrader = websocket.Upgrader{\r\n\tReadBufferSize:  1024,\r\n\tWriteBufferSize: 65536,\r\n\tCheckOrigin: func(r *http.Request) bool {\r\n\t\treturn true\r\n\t},\r\n}\r\n\r\nfunc wsHandler(ctx *gin.Context) {\r\n\t//TODO:auth 这里鉴权, 成功就修改一下下面wsConn的id\r\n\tc := WsConnContext{}\r\n\tvar err error\r\n\r\n\tc.Conn, err = upgrader.Upgrade(ctx.Writer, ctx.Request, nil)\r\n\tif err != nil {\r\n\t\tlogrus.Errorf(\"[wsHandler] ws upgrade fail, %+v\", err)\r\n\t}\r\n\r\n\t//处理连接\r\n\tfor {\r\n\t\terr = c.Conn.SetReadDeadline(time.Now().Add(wsTimeout))\r\n\t\t_, data, err := c.Conn.ReadMessage()\r\n\t\tif err != nil {\r\n\t\t\tlogrus.Errorf(\"[wsHandler] ReadMessage failed, %+v\", err)\r\n\t\t\treturn\r\n\t\t}\r\n\t\tc.HandlePackage(data)\r\n\t}\r\n}\r\n\r\n// HandlePackage 分类型处理数据包\r\nfunc (c *WsConnContext) HandlePackage(bytes []byte) {\r\n\tinput := Package{}\r\n\terr := json.Unmarshal(bytes, &input)\r\n\tif err != nil {\r\n\t\tlogrus.Errorf(\"[HandlePackage] json unmarshal %+v\", err)\r\n\t\t//TODO: release连接\r\n\t\treturn\r\n\t}\r\n\r\n\t//分类型处理\r\n\t//TODO\r\n\tswitch input.Type {\r\n\tcase PackageType_PT_UNKNOWN:\r\n\t\tfmt.Println(\"UNKNOWN\")\r\n\tcase PackageType_PT_SIGN_IN:\r\n\t\tfmt.Println(\"SIGN_IN\")\r\n\tcase PackageType_PT_SYNC:\r\n\t\tfmt.Println(\"SYNC\")\r\n\tcase PackageType_PT_HEARTBEAT:\r\n\t\tfmt.Println(\"HEARTBEAT\")\r\n\tcase PackageType_PT_MESSAGE:\r\n\t\tfmt.Println(\"MESSAGE\")\r\n\tdefault:\r\n\t\tlogrus.Info(\"SWITCH OTHER\")\r\n\t}\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/api/ws.go b/api/ws.go
+--- a/api/ws.go	(revision ac40ed87871307c1ca70261010be675110775c8f)
++++ b/api/ws.go	(date 1666664303531)
+@@ -19,11 +19,12 @@
+ 
+ type PackageType int
+ type Package struct {
+-	//数据包内容, 按需修改
++	//数据包
+ 	Type PackageType
+ 	Id   int64
+ 	data []byte
+ }
++
+ type WsConnContext struct {
+ 	Conn     *websocket.Conn
+ 	UserId   int64
+@@ -57,7 +58,7 @@
+ 		logrus.Errorf("[wsHandler] ws upgrade fail, %+v", err)
+ 	}
+ 
+-	//处理连接
++	//读取数据
+ 	for {
+ 		err = c.Conn.SetReadDeadline(time.Now().Add(wsTimeout))
+ 		_, data, err := c.Conn.ReadMessage()
+Index: api/api.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package api\r\n\r\nimport \"github.com/gin-gonic/gin\"\r\n\r\nvar Engine *gin.Engine\r\n\r\nfunc useRouter(r *gin.Engine) {\r\n\tapi := r.Group(\"/api\")\r\n\t{\r\n\t\tuser := api.Group(\"/user\")\r\n\t\t{\r\n\t\t\tuser.POST(\"/register\", nil)\r\n\t\t}\r\n\t}\r\n\tr.GET(\"/ws\", wsHandler) \r\n}\r\n\r\nfunc init() {\r\n\tEngine = gin.Default()\r\n\tuseRouter(Engine)\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/api/api.go b/api/api.go
+--- a/api/api.go	(revision ac40ed87871307c1ca70261010be675110775c8f)
++++ b/api/api.go	(date 1666626122909)
+@@ -12,7 +12,7 @@
+ 			user.POST("/register", nil)
+ 		}
+ 	}
+-	r.GET("/ws", wsHandler) 
++	r.GET("/ws", wsHandler)
+ }
+ 
+ func init() {
