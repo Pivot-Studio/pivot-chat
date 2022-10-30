@@ -13,6 +13,7 @@ require (
 
 require (
 	github.com/go-redis/redis/v8 v8.11.5
+	github.com/golang-jwt/jwt/v4 v4.4.2
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
 

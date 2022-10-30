@@ -1,0 +1,18 @@
+Index: service/conn-manager.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/service/conn-manager.go b/service/conn-manager.go
+--- a/service/conn-manager.go	
++++ b/service/conn-manager.go	
+@@ -34,3 +34,9 @@
+ func DeleteConn(userID int64) {
+ 	ConnsManager.Delete(userID)
+ }
++
++// ReleaseConn 释放连接
++func ReleaseConn(UserID int64) {
++	//删除用户 - 连接表
++	DeleteConn(UserID)
++}
