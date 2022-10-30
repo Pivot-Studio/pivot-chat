@@ -172,7 +172,7 @@ func (gpo *GroupOperator) JoinGroup(input *model.UserJoinGroupInput) error {
 }
 
 // SaveGroupMessage 持久化群组消息, 同时会发送给每一个人
-func (gpo *GroupOperator) SaveGroupMessage(SendInfo *model.GroupMessageInput, g *Group_) error {
+func (gpo *GroupOperator) SaveGroupMessage(SendInfo *model.GroupMessageInput) error {
 	g, err := gpo.GetGroup(SendInfo.GroupId)
 	if err != nil {
 		logrus.Errorf("[service.SaveGroupMessage] GetGroup %+v", err)
