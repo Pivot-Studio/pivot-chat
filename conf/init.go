@@ -29,7 +29,7 @@ type Config struct {
 	TokenSecret string
 }
 
-var K8SConfig = "/etc/chat/config.json"
+var K8SConfig = "/etc/chat/conf.json"
 
 func init() {
 	C = &Config{}
