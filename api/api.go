@@ -13,6 +13,7 @@ func useRouter(r *gin.Engine) {
 			user.GET("/email", Email)
 			user.POST("/chgPwd", ChgPwd)
 			user.POST("/login", Login)
+			user.GET("/getMembersbyGroupId")
 		}
 	}
 	r.GET("/ws", wsHandler)
