@@ -1,7 +1,16 @@
 package service
 
 import (
+	"context"
+	"fmt"
+	"math/rand"
+	"strings"
+	"time"
+
 	"github.com/Pivot-Studio/pivot-chat/conf"
+	"github.com/Pivot-Studio/pivot-chat/dao"
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/gomail.v2"
 )
 
@@ -189,7 +198,9 @@ var (
 	</body>
 	</html>`
 )
-
+const (
+	CHAT_CODE_PREFIX = "CHAT_CODE_PREFIX"
+)
 func init() {
 	d = gomail.NewDialer(
 		conf.C.EmailServer.Host,
@@ -197,4 +208,40 @@ func init() {
 		conf.C.EmailServer.Email,
 		conf.C.EmailServer.Password,
 	)
+}
+
+// 生成验证码
+func CreatCode() (code string) {
+	rand.Seed(time.Now().Unix())
+	code = fmt.Sprintf("%6v", rand.Intn(600000))
+	return
+}
+
+// 发送验证码
+func SendEmail(ctx context.Context, email string, captcha string) (err error) {
+	m := gomail.NewMessage()
+	m.SetHeader("From", conf.C.EmailServer.Email)
+	m.SetHeader("To", email)
+	m.SetHeader("Subject", "邮箱验证")
+	content := strings.Replace(emailContent, "VerifyCodePlace", captcha, -1)
+	m.SetBody("text/html", content)
+	err = d.DialAndSend(m)
+	if err != nil {
+		logrus.Error("[SendEmail] send to email:%s err:%+v", email, err)
+		return err
+	}
+	return nil
+}
+
+// 将验证码存入redis
+func CaptchaLogic(ctx *gin.Context, code, email string) {
+	codeKey := CHAT_CODE_PREFIX + email
+	dao.Cache.Set(ctx, codeKey, code, time.Minute*5) //存入redis 有效5min
+}
+
+// 比较验证码
+func CaptchaCheck(ctx *gin.Context, input string, email string) bool {
+	codeKey := CHAT_CODE_PREFIX + email
+	code := dao.Cache.Get(ctx, codeKey).String() //对比验证码是否一致
+	return code == input
 }

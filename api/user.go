@@ -128,3 +128,27 @@ func Email(ctx *gin.Context) {
 		"msg": "发送验证码成功",
 	})
 }
+
+type loginParam struct {
+	Password string `form:"password" binding:"required"`
+	Email    string `form:"email" binding:"required"`
+}
+
+func Login(ctx *gin.Context) {
+	p := &loginParam{}
+	err := ctx.ShouldBind(p)
+	if err != nil {
+		logrus.Errorf("[Login] %+v", err)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "邮箱或密码格式不合法",
+		})
+		return
+	}
+	token, err := service.Login(p.Email, p.Password)
+	ctx.JSON(http.StatusOK, gin.H{
+		"msg": "登录成功",
+		"data": token,
+	})
+	return
+
+}

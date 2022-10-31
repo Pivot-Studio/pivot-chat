@@ -77,26 +77,15 @@ var upgrader = websocket.Upgrader{
 }
 
 func wsHandler(ctx *gin.Context) {
-	//todo 紧急解决
-	req := LoginInfo{
-		Email:    ctx.Query("email"),
-		Password: ctx.Query("password"),
-	}
-	logrus.Infof("email:%s password:%s", req.Email, req.Password)
-	if req.Email == "" || req.Password == "" {
+	user, _, err := service.GetUserFromAuth(ctx)
+	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-			"msg": "登录失败, 账号密码不能为空",
+			"msg": "登录失败",
+			"data": err.Error(),
 		})
 		return
 	}
-
-	if !service.Auth(req.Email, req.Password) {
-		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-			"msg": "登录失败, 账号密码错误或不匹配",
-		})
-		return
-	}
-	var err error
+	defer service.DeleteToken(user.Email)
 	// 登录成功, 升级为websocket
 	conn := service.Conn{
 		WSMutex: sync.Mutex{},
@@ -107,8 +96,7 @@ func wsHandler(ctx *gin.Context) {
 		return
 	}
 	// 通过email获取userid
-	user := model.User{}
-	err = dao.RS.GetUserByEmail(&user, req.Email)
+	err = dao.RS.GetUserByEmail(user, user.Email)
 	if err != nil {
 		logrus.Errorf("[wsHandler] GetUserByEmail fail, %+v", err)
 		return
@@ -116,8 +104,10 @@ func wsHandler(ctx *gin.Context) {
 	// conn加入map
 	conn.UserId = user.UserId
 	service.SetConn(user.UserId, &conn)
+	defer service.DeleteConn(user.UserId) // 出现差错就从map里删除
 
-	err = conn.Send("login success! waiting for package...", service.PackageType(PackageType_PT_SIGN_IN))
+
+	err = conn.Send("ws success!waiting for package...", service.PackageType(PackageType_PT_SIGN_IN))
 	if err != nil {
 		logrus.Errorf("[wsHandler] Send login ack failed, %+v", err)
 		service.DeleteConn(user.UserId) // 出现差错就从map里删除
