@@ -18,7 +18,7 @@ func useRouter(r *gin.Engine) {
 		}
 		group := api.Group("/group")
 		{
-			group.POST("/getMembersbyGroupId", GetMembersByGroupId)
+			group.GET("/getMembersbyGroupId", GetMembersByGroupId)
 
 		}
 
