@@ -1,16 +1,25 @@
 package api
 
 import (
+	"errors"
+
+	"github.com/Pivot-Studio/pivot-chat/dao"
 	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/Pivot-Studio/pivot-chat/service"
 )
 
 func HandleGroupMessage(meg *model.GroupMessageInput) error {
-	err := service.GroupOp.SaveGroupMessage(meg)
+	if !dao.RS.ExistGroup(meg.GroupId) {
+		return errors.New("group not existed!")
+	}
+	err := service.SendMessage(meg)
 	return err
 }
 
 func HandleJoinGroup(meg *model.UserJoinGroupInput) error {
-	err := service.GroupOp.JoinGroup(meg)
+	if !dao.RS.ExistGroup(meg.GroupId) {
+		return errors.New("group not existed!")
+	}
+	err := service.UserJoinGroup(meg)
 	return err
 }

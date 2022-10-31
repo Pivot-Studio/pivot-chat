@@ -1,6 +1,6 @@
 module github.com/Pivot-Studio/pivot-chat
 
-go 1.17
+go 1.19
 
 require (
 	github.com/gin-gonic/gin v1.8.1
@@ -13,7 +13,6 @@ require (
 
 require (
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/golang-jwt/jwt/v4 v4.4.2
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
 

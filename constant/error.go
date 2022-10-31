@@ -14,8 +14,3 @@ var (
 	EmailExistErr     = &ErrorBase{"邮箱已注册"}
 	UserNotMatchGroup = &ErrorBase{"用户不在群组内"}
 )
-
-var (
-	NotGroupRecordErr  = &ErrorBase{"NoGroupFound"}
-	GroupGetMembersErr = &ErrorBase{"GroupGetMembers"}
-)

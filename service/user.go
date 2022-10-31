@@ -89,3 +89,17 @@ func CaptchaCheck(ctx *gin.Context, input string, email string) bool {
 func ChgPwd(ctx *gin.Context, email string, oldPwd string, newPwd string) error {
 	return dao.RS.ChangeUserPwd(email, oldPwd, newPwd)
 }
+
+func FindUserById(ctx *gin.Context, userid int64) (err error, data map[string]interface{}) {
+	user := new(model.User)
+	user.UserId = userid
+	err = dao.RS.GetUserbyId(user)
+	if err != nil {
+		logrus.Fatalf("[Service.FindUserById] FindUserById %+v", err)
+		return err, nil
+	}
+	data["username"] = user.UserName
+	data["user_id"] = user.UserId
+	data["email"] = user.Email
+	return nil, data
+}
