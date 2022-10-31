@@ -222,7 +222,7 @@ func (gpo *GroupOperator) SaveGroupMessage(SendInfo *model.GroupMessageInput) er
 	return nil
 }
 
-// GetUsersbyGroupId 根据GroupID获取当前members
+// GetUsersByGroupId 根据GroupID获取当前members
 func (gpo *GroupOperator) GetMembersByGroupId(ctx *gin.Context, groupID int64) ([]map[string]interface{}, error) {
 	g, err := gpo.GetGroup(groupID)
 	if err != nil {

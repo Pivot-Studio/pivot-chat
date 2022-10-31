@@ -88,7 +88,7 @@ func FindUserById(ctx *gin.Context) {
 	}
 
 	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
-		"msg": "查询成功",
+		"msg":  "查询成功",
 		"data": data,
 	})
 
