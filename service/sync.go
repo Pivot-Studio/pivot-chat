@@ -8,7 +8,7 @@ import (
 )
 
 func Sync(input *model.GroupMessageSyncInput) error { // 进入这里时，group内容是跟数据库一致的，members也是使用的正确缓存
-	g, err := GroupOp.GetGroup(input.GroupId) // 这肯定是最新的，而且是一次
+	g, err := GroupOp.GetGroup(input.GroupId)
 	if err != nil {
 		return err
 	}
@@ -16,7 +16,7 @@ func Sync(input *model.GroupMessageSyncInput) error { // 进入这里时，group
 		logrus.Fatalf("[Service] | sync error: user isn't in group | input:", input)
 		return constant.UserNotMatchGroup
 	}
-	megs, err := dao.RS.SyncMessage(input.GroupId, input.SyncSeq)
+	megs, err := dao.RS.SyncMessage(input.GroupId, input.SyncSeq, int(input.Limit))
 	if err != nil {
 		return err
 	}
