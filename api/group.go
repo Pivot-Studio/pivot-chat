@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type getMembersbyGroupIdParam struct {
+type getMembersByGroupIdParam struct {
 	GroupId int64 `form:"groupid" binding:"required"`
 }
 
@@ -23,21 +23,21 @@ func HandleJoinGroup(meg *model.UserJoinGroupInput) error {
 	return err
 }
 
-func GetMembersbyGroupId(ctx *gin.Context) {
-	p := &getMembersbyGroupIdParam{}
+func GetMembersByGroupId(ctx *gin.Context) {
+	p := &getMembersByGroupIdParam{}
 	err := ctx.ShouldBind(p)
 	if err != nil {
-		logrus.Errorf("[GetMembersbyGroupId] %+v", err)
+		logrus.Errorf("[GetMembersByGroupId] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"msg": "参数解析错误，查询失败",
 		})
 		return
 	}
 
-	data, err := service.GroupOp.GetMembersbyGroupId(ctx, p.GroupId)
+	data, err := service.GroupOp.GetMembersByGroupId(ctx, p.GroupId)
 
 	if err != nil {
-		logrus.Errorf("[GetMembersbyGroupId] %+v", err)
+		logrus.Errorf("[GetMembersByGroupId] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"msg": err.Error() + "，查询失败",
 		})
