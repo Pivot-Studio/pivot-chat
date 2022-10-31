@@ -18,4 +18,5 @@ var (
 	TokenLayoutErr     = &ErrorBase{"Token格式错误"}
 	NotGroupRecordErr  = &ErrorBase{"NoGroupFound"}
 	GroupGetMembersErr = &ErrorBase{"GroupGetMembers"}
+	TokenAuthErr       = &ErrorBase{"token鉴权失败"}
 )

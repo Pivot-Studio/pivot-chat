@@ -60,6 +60,24 @@ func Register(ctx *gin.Context, user *model.User, captcha string) (err error) {
 	return nil
 }
 
+func FindUserById(ctx *gin.Context, userid int64) (data map[string]interface{}, err error) {
+	_, err = GetUserFromAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
+	user := &model.User{}
+	user.UserId = userid
+	err = dao.RS.GetUserbyId(user)
+	if err != nil {
+		logrus.Fatalf("[Service.FindUserById] FindUserById %+v", err)
+		return nil, err
+	}
+	data["username"] = user.UserName
+	data["user_id"] = user.UserId
+	data["email"] = user.Email
+	return data, nil
+}
+
 func ChgPwd(ctx *gin.Context, email string, oldPwd string, newPwd string) error {
 	return dao.RS.ChangeUserPwd(email, oldPwd, newPwd)
 }
