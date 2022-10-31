@@ -14,7 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func Login(email string, password string) (token string, err error){
+func Login(email string, password string) (token string, err error) {
 	user, valid := auth(email, password)
 	if !valid {
 		logrus.Errorf("[Service.Login] auth %+v", err)
@@ -25,7 +25,7 @@ func Login(email string, password string) (token string, err error){
 		logrus.Errorf("[Service.Login] GenerateToken %+v", err)
 		return "", errors.New("生成token失败")
 	}
-	AddToken(token, user.Email)
+	// AddToken(token, user.Email)
 	return token, nil
 }
 func auth(email string, password string) (*model.User, bool) {
@@ -59,8 +59,6 @@ func Register(ctx *gin.Context, user *model.User, captcha string) (err error) {
 	}
 	return nil
 }
-
-
 
 func ChgPwd(ctx *gin.Context, email string, oldPwd string, newPwd string) error {
 	return dao.RS.ChangeUserPwd(email, oldPwd, newPwd)

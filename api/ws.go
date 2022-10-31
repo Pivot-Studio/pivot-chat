@@ -36,15 +36,6 @@ type LoginInfo struct {
 	//AppId    int64  `json:"appid"`
 }
 
-// type LoginResponse struct {
-// 	Msg  string `json:"msg"`
-// 	data struct {
-// 		Username string `json:"username"`
-// 		UserId   int64  `json:"user_id"`
-// 		Email    string `json:"email"`
-// 	}
-// }
-
 const (
 	PackageType_PT_ERR       PackageType = 0
 	PackageType_PT_UNKNOWN   PackageType = 0
@@ -77,14 +68,15 @@ var upgrader = websocket.Upgrader{
 }
 
 func wsHandler(ctx *gin.Context) {
-	user, _, err := service.GetUserFromAuth(ctx)
+	user, token, err := service.WSLoginAuth(ctx)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-			"msg": "登录失败",
+			"msg":  "登录失败",
 			"data": err.Error(),
 		})
 		return
 	}
+	service.AddToken(token, user.Email)
 	defer service.DeleteToken(user.Email)
 	// 登录成功, 升级为websocket
 	conn := service.Conn{
@@ -103,9 +95,15 @@ func wsHandler(ctx *gin.Context) {
 	}
 	// conn加入map
 	conn.UserId = user.UserId
+
+	// 判断一个用户是否还有别的设备，如果有则下线
+	preConn := service.GetConn(user.UserId)
+	if preConn != nil {
+		service.DeleteConn(user.UserId)
+		logrus.Info("[wsHandler] Get another conn in same userid-%d, delete pre conn", user.UserId)
+	}
 	service.SetConn(user.UserId, &conn)
 	defer service.DeleteConn(user.UserId) // 出现差错就从map里删除
-
 
 	err = conn.Send("ws success!waiting for package...", service.PackageType(PackageType_PT_SIGN_IN))
 	if err != nil {
