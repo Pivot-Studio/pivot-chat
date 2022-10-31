@@ -76,17 +76,11 @@ func ParseToken(tokenString string) (email string, id int64, tokenTime time.Time
 	return email, int64(uid), tokenTime, nil
 }
 
-func WSLoginAuth(ctx *gin.Context) (user *model.User, tokenString string, err error) {
-	authHeader := ctx.Request.Header.Get("Authorization")
-	s := strings.Fields(authHeader)
-	if len(s) != 2 || s[0] != "Bearer" {
-		return nil, "", constant.TokenLayoutErr
-	}
-	tokenString = s[1]
+func WSLoginAuth(tokenString string) (user *model.User, err error) {
 	curTokenemail, curTokenid, curTokenTime, err := ParseToken(tokenString)
 	if err != nil {
 		logrus.Errorf("[Service.WSLoginAuth] ParseToken err:%+v", err)
-		return nil, "", err
+		return nil, err
 	}
 	preToken := GetToken(curTokenemail)
 	if preToken == "" {
@@ -94,44 +88,44 @@ func WSLoginAuth(ctx *gin.Context) (user *model.User, tokenString string, err er
 			UserId: int64(curTokenid),
 			Email:  curTokenemail,
 		}
-		return user, tokenString, nil
+		return user, nil
 	}
 	_, _, preTokenTime, err := ParseToken(preToken)
 	if err != nil {
 		logrus.Errorf("[Service.WSLoginAuth] ParseToken err:%+v", err)
-		return nil, "", err
+		return nil, err
 	}
 	if preTokenTime.After(curTokenTime) {
-		return nil, "", errors.New("登录失败，存在更新的token")
+		return nil, errors.New("登录失败，存在更新的token")
 	}
 
 	user = &model.User{
 		UserId: int64(curTokenid),
 		Email:  curTokenemail,
 	}
-	return user, tokenString, nil
+	return user, nil
 }
-func GetUserFromAuth(ctx *gin.Context) (user *model.User, tokenString string, err error) {
+func GetUserFromAuth(ctx *gin.Context) (user *model.User, err error) {
 	authHeader := ctx.Request.Header.Get("Authorization")
 	s := strings.Fields(authHeader)
 	if len(s) != 2 || s[0] != "Bearer" {
-		return nil, "", constant.TokenLayoutErr
+		return nil, constant.TokenLayoutErr
 	}
-	tokenString = s[1]
+	tokenString := s[1]
 	token, err := jwt.Parse(tokenString, func(*jwt.Token) (interface{}, error) {
 		return []byte(conf.C.TokenSecret), err
 	})
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	claim, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return nil, "", constant.UnLoginErr
+		return nil, constant.UnLoginErr
 	}
 	email, ok0 := claim["email"].(string)
 	uid, ok1 := claim["id"].(float64)
 	if !ok0 || !ok1 {
-		return nil, "", constant.UnLoginErr
+		return nil,  constant.UnLoginErr
 	}
 
 	user = &model.User{
@@ -140,7 +134,7 @@ func GetUserFromAuth(ctx *gin.Context) (user *model.User, tokenString string, er
 	}
 	valid := JudgeToken(tokenString, email)
 	if !valid {
-		return nil, "", constant.TokenLayoutErr
+		return nil,  constant.TokenLayoutErr
 	}
-	return user, tokenString, nil
+	return user,  nil
 }

@@ -77,23 +77,19 @@ func FindUserById(ctx *gin.Context) {
 		return
 	}
 
-	err, data := service.FindUserById(ctx, p.UserId)
+	data, err := service.FindUserById(ctx, p.UserId)
 
 	if err != nil {
 		logrus.Errorf("[FindUserById] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": "输入ID有误，查询失败",
+			"msg": err.Error() + "，查询失败",
 		})
 		return
 	}
 
 	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
 		"msg": "查询成功",
-		"data": map[string]interface{}{
-			"username": data["username"],
-			"user_id":  data["user_id"],
-			"email":    data["email"],
-		},
+		"data": data,
 	})
 
 }
