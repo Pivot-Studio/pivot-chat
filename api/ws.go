@@ -3,6 +3,7 @@ package api
 //import "C"
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -68,7 +69,15 @@ var upgrader = websocket.Upgrader{
 }
 
 func wsHandler(ctx *gin.Context) {
-	user, token, err := service.WSLoginAuth(ctx)
+	token := ctx.Query("token")
+	if token == "" {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"msg":  "登录失败",
+			"data": errors.New("token缺失"),
+		})
+		return
+	}
+	user, err := service.WSLoginAuth(token)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 			"msg":  "登录失败",
