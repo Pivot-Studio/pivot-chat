@@ -234,16 +234,25 @@ func (gpo *GroupOperator) GetMembersByGroupId(ctx *gin.Context, groupID int64) (
 		return nil, constant.GroupGetMembersErr
 	}
 	members := g.Members
-	var data []map[string]interface{}
-	var member map[string]interface{}
-	var i = 0
-	for ; i < len(*members); i++ {
-		member, err = FindUserById(ctx, (*members)[i].UserId)
+	var ret []map[string]interface{}
+	for _, member := range *members {
+		var data map[string]interface{}
+		user := &model.User{}
+		user.UserId = member.UserId
+		err = dao.RS.GetUserbyId(user)
+		if err != nil {
+			logrus.Errorf("[service.GetMembersByGroupId] GetUserbyId %+v", err)
+			continue
+		}
+		data["user_name"] = user.UserName
+		data["user_id"] = user.UserId
+		data["email"] = user.Email
+		data["type_in_group"] = member.MemberType
 		if err != nil {
 			logrus.Errorf("[service.GetMembersByGroupId] GetGroup %+v", err)
 			return nil, constant.GroupGetMembersErr
 		}
-		data = append(data, member)
+		ret = append(ret, data)
 	}
-	return data, nil
+	return ret, nil
 }
