@@ -146,7 +146,7 @@ func Login(ctx *gin.Context) {
 	}
 	token, err := service.Login(p.Email, p.Password)
 	ctx.JSON(http.StatusOK, gin.H{
-		"msg": "登录成功",
+		"msg":  "登录成功",
 		"data": token,
 	})
 	return

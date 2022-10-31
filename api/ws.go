@@ -99,6 +99,7 @@ func wsHandler(ctx *gin.Context) {
 	// 判断一个用户是否还有别的设备，如果有则下线
 	preConn := service.GetConn(user.UserId)
 	if preConn != nil {
+		preConn.Send("有别的设备登录了你的用户，你寄了", service.PackageType_PT_ERR)
 		service.DeleteConn(user.UserId)
 		logrus.Info("[wsHandler] Get another conn in same userid-%d, delete pre conn", user.UserId)
 	}
@@ -108,7 +109,6 @@ func wsHandler(ctx *gin.Context) {
 	err = conn.Send("ws success!waiting for package...", service.PackageType(PackageType_PT_SIGN_IN))
 	if err != nil {
 		logrus.Errorf("[wsHandler] Send login ack failed, %+v", err)
-		service.DeleteConn(user.UserId) // 出现差错就从map里删除
 		return
 	}
 
@@ -118,7 +118,6 @@ func wsHandler(ctx *gin.Context) {
 		_, data, err := conn.WS.ReadMessage()
 		if err != nil {
 			logrus.Errorf("[wsHandler] ReadMessage failed, %+v", err)
-			service.DeleteConn(user.UserId) // 出现差错就从map里删除
 			return
 		}
 		HandlePackage(data, &conn)
@@ -167,35 +166,17 @@ func HandlePackage(bytes []byte, conn *service.Conn) {
 func Message(data model.GroupMessageInput, userId int64) error {
 	data.UserId = userId
 	fmt.Printf("%+v\n", data)
-	// err := json.Unmarshal(data, &meg)
-	// if err != nil {
-	// 	logrus.Errorf("[Message] json unmarshal %+v", err)
-	// 	return err
-	// }
-	// meg.UserId = userId
 	return HandleGroupMessage(&data)
 }
 
 func Sync(data model.GroupMessageSyncInput, userId int64) error {
 	data.UserId = userId
 	fmt.Printf("%+v\n", data)
-	// err := json.Unmarshal([]byte(data), &meg)
-	// if err != nil {
-	// 	logrus.Errorf("[Message] json unmarshal %+v", err)
-	// 	return err
-	// }
-	// meg.UserId = userId
 	return HandleSync(&data)
 }
 
 func UserJoinGroup(data model.UserJoinGroupInput, userId int64) error {
 	data.UserId = userId
 	fmt.Printf("%+v\n", data)
-	// err := json.Unmarshal(data, &meg)
-	// if err != nil {
-	// 	logrus.Errorf("[Message] json unmarshal %+v", err)
-	// 	return err
-	// }
-	// meg.UserId = userId
 	return HandleJoinGroup(&data)
 }

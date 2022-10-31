@@ -198,9 +198,11 @@ var (
 	</body>
 	</html>`
 )
+
 const (
 	CHAT_CODE_PREFIX = "CHAT_CODE_PREFIX"
 )
+
 func init() {
 	d = gomail.NewDialer(
 		conf.C.EmailServer.Host,
