@@ -33,6 +33,9 @@ type emailParam struct {
 type findUserByIdParam struct {
 	UserId int64 `form:"userid" binding:"required"`
 }
+type GetMyGroupsParam struct {
+	UserId int64 `form:"user_id" binding:"required"`
+}
 
 func ChgPwd(ctx *gin.Context) {
 	p := &chgPwdParam{}
@@ -52,7 +55,7 @@ func ChgPwd(ctx *gin.Context) {
 		})
 		return
 	}
-	err = service.ChgPwd(ctx, p.Email, p.OldPwd, passwordHash)
+	err = service.ChgPwd(p.Email, p.OldPwd, passwordHash)
 
 	if err != nil {
 		logrus.Errorf("[chgPwd] %+v", err)
@@ -113,7 +116,7 @@ func Register(ctx *gin.Context) {
 		})
 		return
 	}
-	err = service.Register(ctx, &model.User{
+	err = service.Register(&model.User{
 		Password: passwordHash,
 		Email:    p.Email,
 		UserName: p.UserName,
@@ -183,4 +186,23 @@ func Login(ctx *gin.Context) {
 	})
 	return
 
+}
+
+func GetMyGroups(ctx *gin.Context) {
+	p := &GetMyGroupsParam{}
+	err := ctx.ShouldBindJSON(p)
+	if err != nil {
+		logrus.Fatalf("[api.GetMyGroups] Json %+v", err)
+	}
+
+	g, err := service.GetMyGroups(p.UserId)
+	if err != nil {
+		logrus.Errorf("[api.GetMyGroups] %+v", err)
+		ctx.AbortWithStatusJSON(http.StatusConflict, gin.H{
+			"msg": "服务器错误",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, *g)
 }
