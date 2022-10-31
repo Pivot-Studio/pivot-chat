@@ -2,12 +2,14 @@ package service
 
 import (
 	"encoding/json"
+	"sync"
+	"time"
+
 	"github.com/Pivot-Studio/pivot-chat/constant"
 	"github.com/Pivot-Studio/pivot-chat/dao"
 	"github.com/Pivot-Studio/pivot-chat/model"
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"sync"
-	"time"
 )
 
 var GroupOp GroupOperator
@@ -218,4 +220,15 @@ func (gpo *GroupOperator) SaveGroupMessage(SendInfo *model.GroupMessageInput) er
 	//发送消息, 发送的成员是按现在Group的成员(可能被改变)
 	g.SendGroupMessage(SendInfo, meg.Seq)
 	return nil
+}
+
+// GetUsersbyGroupId 根据GroupID获取当前members
+func (gpo *GroupOperator) GetMembersbyGroupId(ctx *gin.Context, groupID int64) (*[]model.GroupUser, error) {
+	g, err := gpo.GetGroup(groupID)
+	if err != nil {
+		logrus.Errorf("[service.GetMembersByGroupId] GetGroup %+v", err)
+		return nil, constant.GroupGetMembersErr
+	}
+	members := g.Members
+	return members, nil
 }
