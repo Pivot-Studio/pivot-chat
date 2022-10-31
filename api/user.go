@@ -33,9 +33,6 @@ type emailParam struct {
 type findUserByIdParam struct {
 	UserId int64 `form:"userid" binding:"required"`
 }
-type GetMyGroupsParam struct {
-	UserId int64 `form:"user_id" binding:"required"`
-}
 
 func ChgPwd(ctx *gin.Context) {
 	p := &chgPwdParam{}
@@ -189,13 +186,12 @@ func Login(ctx *gin.Context) {
 }
 
 func GetMyGroups(ctx *gin.Context) {
-	p := &GetMyGroupsParam{}
-	err := ctx.ShouldBindJSON(p)
+	user, err := service.GetUserFromAuth(ctx)
 	if err != nil {
-		logrus.Fatalf("[api.GetMyGroups] Json %+v", err)
+		logrus.Fatalf("[api.GetMyGroups] GetUserFromAuth %+v", err)
 	}
 
-	g, err := service.GetMyGroups(p.UserId)
+	g, err := service.GetMyGroups(user.UserId)
 	if err != nil {
 		logrus.Errorf("[api.GetMyGroups] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusConflict, gin.H{

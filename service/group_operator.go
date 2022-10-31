@@ -17,7 +17,7 @@ var GroupOp GroupOperator
 type Group_ struct {
 	group   *model.Group
 	Members *[]model.GroupUser
-	sync.Mutex
+	sync.RWMutex
 }
 type GroupOperator struct {
 	Groups    []*Group_
@@ -233,9 +233,12 @@ func (gpo *GroupOperator) GetMembersByGroupId(ctx *gin.Context, groupID int64) (
 		logrus.Errorf("[service.GetMembersByGroupId] GetGroup %+v", err)
 		return nil, constant.GroupGetMembersErr
 	}
-	members := g.Members
+	// copy一遍以免遍历出现并发问题
+	var members []model.GroupUser
+	copy(members, *g.Members)
+
 	var ret []map[string]interface{}
-	for _, member := range *members {
+	for _, member := range members {
 		var data map[string]interface{}
 		user := &model.User{}
 		user.UserId = member.UserId
