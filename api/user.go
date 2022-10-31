@@ -30,6 +30,10 @@ type emailParam struct {
 	Email string `form:"email" binding:"required"`
 }
 
+type findUserByIdParam struct {
+	UserId int64 `form:"userid" binding:"required"`
+}
+
 func ChgPwd(ctx *gin.Context) {
 	p := &chgPwdParam{}
 	err := ctx.ShouldBind(p)
@@ -60,6 +64,38 @@ func ChgPwd(ctx *gin.Context) {
 	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
 		"msg": "修改密码成功",
 	})
+}
+
+func FindUserById(ctx *gin.Context) {
+	p := &findUserByIdParam{}
+	err := ctx.ShouldBind(p)
+	if err != nil {
+		logrus.Errorf("[FindUserById] %+v", err)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "参数解析错误，查询失败",
+		})
+		return
+	}
+
+	err, data := service.FindUserById(ctx, p.UserId)
+
+	if err != nil {
+		logrus.Errorf("[FindUserById] %+v", err)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "输入ID有误，查询失败",
+		})
+		return
+	}
+
+	ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+		"msg": "查询成功",
+		"data": map[string]interface{}{
+			"username": data["username"],
+			"user_id":  data["user_id"],
+			"email":    data["email"],
+		},
+	})
+
 }
 
 func Register(ctx *gin.Context) {
