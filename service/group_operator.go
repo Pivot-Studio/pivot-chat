@@ -223,12 +223,23 @@ func (gpo *GroupOperator) SaveGroupMessage(SendInfo *model.GroupMessageInput) er
 }
 
 // GetUsersbyGroupId 根据GroupID获取当前members
-func (gpo *GroupOperator) GetMembersbyGroupId(ctx *gin.Context, groupID int64) (*[]model.GroupUser, error) {
+func (gpo *GroupOperator) GetMembersByGroupId(ctx *gin.Context, groupID int64) ([]map[string]interface{}, error) {
 	g, err := gpo.GetGroup(groupID)
 	if err != nil {
 		logrus.Errorf("[service.GetMembersByGroupId] GetGroup %+v", err)
 		return nil, constant.GroupGetMembersErr
 	}
 	members := g.Members
-	return members, nil
+	var data []map[string]interface{}
+	var member map[string]interface{}
+	var i = 0
+	for ; i < len(*members); i++ {
+		member, err = FindUserById(ctx, (*members)[i].UserId)
+		if err != nil {
+			logrus.Errorf("[service.GetMembersByGroupId] GetGroup %+v", err)
+			return nil, constant.GroupGetMembersErr
+		}
+		data = append(data, member)
+	}
+	return data, nil
 }
