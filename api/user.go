@@ -122,7 +122,7 @@ func Register(ctx *gin.Context) {
 	if err != nil {
 		logrus.Errorf("[Register] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg": err.Error(),
+			"msg": "注册失败，" + err.Error(),
 		})
 		return
 	}

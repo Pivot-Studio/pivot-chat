@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Pivot-Studio/pivot-chat/util"
+	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 
 	"github.com/Pivot-Studio/pivot-chat/constant"
@@ -51,7 +52,9 @@ func Register(user *model.User, captcha string) (err error) {
 	//邮箱验证码部分
 	codeKey := CHAT_CODE_PREFIX + user.Email
 	res, err := dao.Cache.Get(context.Background(), codeKey).Result()
-	if err != nil {
+	if err != nil && err == redis.Nil {
+		return errors.New("未查询到有效的验证码")
+	} else if err != nil {
 		return err
 	}
 	if res != captcha {
