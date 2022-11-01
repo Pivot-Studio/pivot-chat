@@ -18,7 +18,7 @@ type GroupMessageSyncInput struct {
 	GroupId int64 `json:"group_id2"` // 群组id
 	SyncSeq int64 `json:"sync_seq2"` // 开始同步的seq，是用户的本地seq+1
 	Limit   int64 `json:"limit2"`
-	IsNew	int64  `json:"is_new2"`
+	IsNew   int64 `json:"is_new2"`
 }
 
 type GroupMessageSyncOutput struct {

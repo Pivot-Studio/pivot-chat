@@ -7,7 +7,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/Pivot-Studio/pivot-chat/dao"
 	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/Pivot-Studio/pivot-chat/service"
 	"github.com/Pivot-Studio/pivot-chat/util"
@@ -142,8 +141,8 @@ func Email(ctx *gin.Context) {
 		})
 		return
 	}
-	code := service.CreatCode()
-	err = dao.Cache.Set(context.Background(), p.Email, code, time.Minute*30).Err()
+	code, err := service.Email(ctx, p.Email)
+	// err = dao.Cache.Set(context.Background(), p.Email, code, time.Minute*30).Err()
 	go func() {
 		emailctx, canal := context.WithTimeout(context.TODO(), 3*time.Second)
 		defer canal()
@@ -178,12 +177,12 @@ func Login(ctx *gin.Context) {
 	}
 	user, token, err := service.Login(p.Email, p.Password)
 	ctx.JSON(http.StatusOK, gin.H{
-		"msg":  "登录成功",
+		"msg": "登录成功",
 		"data": gin.H{
-			"token": token,
-			"user_id" : user.UserId,
+			"token":     token,
+			"user_id":   user.UserId,
 			"user_name": user.UserName,
-			"email": user.Email,
+			"email":     user.Email,
 		},
 	})
 	return

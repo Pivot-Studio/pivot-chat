@@ -2,18 +2,18 @@ package api
 
 import (
 	"fmt"
-	"net/http"
 	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/Pivot-Studio/pivot-chat/service"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"net/http"
 )
 
 type SyncParam struct {
 	GroupId int64 `form:"group_id" binding:"required"` // 群组id
 	SyncSeq int64 `form:"sync_seq" binding:"required"` // 开始同步的seq，是用户的本地seq+1
 	Limit   int64 `form:"limit" binding:"required"`
-	IsNew	int64  `form:"is_new" binding:"required"`
+	IsNew   int64 `form:"is_new" binding:"required"`
 }
 
 func Sync(ctx *gin.Context) {
@@ -46,5 +46,5 @@ func Sync(ctx *gin.Context) {
 		"msg":  fmt.Sprintf("同步%d条消息成功", len(ret.Data)),
 		"data": ret,
 	})
-	return 
+	return
 }

@@ -213,10 +213,10 @@ func init() {
 }
 
 // 生成验证码
-func CreatCode() (code string) {
+func Email(ctx *gin.Context, email string) (code string, err error) {
 	rand.Seed(time.Now().Unix())
 	code = fmt.Sprintf("%6v", rand.Intn(600000))
-	return
+	return code, CaptchaLogic(ctx, code, email)
 }
 
 // 发送验证码
@@ -236,9 +236,9 @@ func SendEmail(ctx context.Context, email string, captcha string) (err error) {
 }
 
 // 将验证码存入redis
-func CaptchaLogic(ctx *gin.Context, code, email string) {
+func CaptchaLogic(ctx *gin.Context, code, email string) error {
 	codeKey := CHAT_CODE_PREFIX + email
-	dao.Cache.Set(ctx, codeKey, code, time.Minute*5) //存入redis 有效5min
+	return dao.Cache.Set(ctx, codeKey, code, time.Minute*5).Err() //存入redis 有效5min
 }
 
 // 比较验证码
