@@ -20,7 +20,7 @@ func useRouter(r *gin.Engine) {
 		{
 			group.GET("/getMembersbyGroupId", GetMembersByGroupId)
 			group.GET("/sync", Sync)
-
+			group.POST("/create", CreateGroup)
 		}
 
 	}

@@ -201,26 +201,21 @@ func GetMyGroups(ctx *gin.Context) {
 	if err != nil {
 		logrus.Fatalf("[api.GetMyGroups] GetUserFromAuth %+v", err)
 	}
+	g := new([]service.GetMyGroupResp)
 
-	g, err := service.GetMyGroups(user.UserId)
+	g, err = service.GetMyGroups(user.UserId)
 	if err != nil {
 		logrus.Errorf("[api.GetMyGroups] %+v", err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"msg":  "查询失败",
-			"data": nil,
+			"data": *g,
 		})
 		return
 	}
-	if g != nil {
-		ctx.JSON(http.StatusOK, gin.H{
-			"msg":  "查询成功",
-			"data": *g,
-		})
-	} else {
-		ctx.JSON(http.StatusOK, gin.H{
-			"msg":  "查询成功",
-			"data": []service.GetMyGroupResp{},
-		})
-	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"msg":  "查询成功",
+		"data": *g,
+	})
 
 }
