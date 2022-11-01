@@ -4,7 +4,8 @@ import "time"
 
 // Group 群组
 type Group struct {
-	GroupId      int64     `gorm:"primarykey"` // 群组id
+	GroupId      int64 `gorm:"primarykey"` // 群组id
+	OwnerId      int64
 	Name         string    // 组名
 	Introduction string    // 群简介
 	UserNum      int32     // 群组人数

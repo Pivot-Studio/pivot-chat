@@ -14,7 +14,14 @@ func useRouter(r *gin.Engine) {
 			user.POST("/chgPwd", ChgPwd)
 			user.POST("/login", Login)
 			user.GET("/findUserById", FindUserById)
+			user.GET("/mygroups", GetMyGroups)
 		}
+		group := api.Group("/group")
+		{
+			group.GET("/getMembersbyGroupId", GetMembersByGroupId)
+
+		}
+
 	}
 	r.GET("/ws", wsHandler)
 }
