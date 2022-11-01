@@ -26,9 +26,17 @@ type GetMyGroupResp struct {
 }
 
 func Login(email string, password string) (user *model.User, token string, err error) {
-	user, valid := auth(email, password)
+	user, valid, err := auth(email, password)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			logrus.Errorf("[Service.Login] auth failed:%+v", err)
+			return nil, "", errors.New("该用户未注册")
+		}
+		logrus.Errorf("[Service.Login] auth failed")
+		return nil, "", constant.UnLoginErr
+	}
 	if !valid {
-		logrus.Errorf("[Service.Login] auth %+v", err)
+		logrus.Errorf("[Service.Login] auth failed")
 		return nil, "", constant.UnLoginPwdErr
 	}
 	token, err = util.GenerateToken(user)
@@ -39,14 +47,14 @@ func Login(email string, password string) (user *model.User, token string, err e
 	// AddToken(token, user.Email)
 	return user, token, nil
 }
-func auth(email string, password string) (*model.User, bool) {
+func auth(email string, password string) (*model.User, bool, error) {
 	user := &model.User{}
 	err := dao.RS.GetUserByEmail(user, email)
 	if err != nil {
 		logrus.Errorf("[Service.Auth] GetUserByEmail file %+v", err)
-		return nil, false
+		return nil, false, err
 	}
-	return user, util.ComparePassword(user.Password, password)
+	return user, util.ComparePassword(user.Password, password), nil
 }
 func Register(user *model.User, captcha string) (err error) {
 	//邮箱验证码部分
