@@ -211,9 +211,16 @@ func GetMyGroups(ctx *gin.Context) {
 		})
 		return
 	}
+	if g != nil {
+		ctx.JSON(http.StatusOK, gin.H{
+			"msg":  "查询成功",
+			"data": *g,
+		})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{
+			"msg":  "查询成功",
+			"data": []service.GetMyGroupResp{},
+		})
+	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"msg":  "查询成功",
-		"data": *g,
-	})
 }
