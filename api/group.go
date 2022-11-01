@@ -1,12 +1,11 @@
 package api
 
 import (
-	"net/http"
-
 	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/Pivot-Studio/pivot-chat/service"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"net/http"
 )
 
 type getMembersByGroupIdParam struct {
@@ -50,4 +49,45 @@ func GetMembersByGroupId(ctx *gin.Context) {
 		"data": data,
 	})
 
+}
+
+type CreateGroupParams struct {
+	Name         string `json:"group_name"`
+	Introduction string `json:"introduction"`
+}
+
+func CreateGroup(ctx *gin.Context) {
+	p := &CreateGroupParams{}
+	err := ctx.ShouldBindJSON(p)
+	resp := &service.CreateGroupResp{}
+	if err != nil || p.Name == "" {
+		logrus.Errorf("[api.CreateGroup] %+v", err)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg":  "创建失败, 参数不合法",
+			"data": *resp,
+		})
+	}
+
+	user, err := service.GetUserFromAuth(ctx)
+	if err != nil {
+		logrus.Errorf("[api.CreateGroup] GetUserFromAuth %+v", err)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg":  "创建失败, 鉴权失败",
+			"data": *resp,
+		})
+	}
+
+	resp, err = service.CreateGroup(p.Name, p.Introduction, user.UserId)
+	if err != nil {
+		logrus.Errorf("[api.CreateGroup] %+v", err)
+		resp = &service.CreateGroupResp{}
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg":  "创建失败, 服务器错误",
+			"data": *resp,
+		})
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"msg":  "创建成功",
+		"data": *resp,
+	})
 }

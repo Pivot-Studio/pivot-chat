@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (rs *RdbService) CreateGroup(groups []*model.Group) error {
+func (rs *RdbService) CreateGroup(groups *model.Group) error {
 	return rs.tx.Create(&groups).Error
 }
 

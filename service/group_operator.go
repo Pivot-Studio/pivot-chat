@@ -259,3 +259,42 @@ func (gpo *GroupOperator) GetMembersByGroupId(ctx *gin.Context, groupID int64) (
 	}
 	return ret, nil
 }
+
+type CreateGroupResp struct {
+	GroupId      int64     `json:"group_id"`
+	OwnerId      int64     `json:"owner_id"`
+	Name         string    `json:"name"`
+	Introduction string    `json:"introduction"`
+	UserNum      int32     `json:"user_num"`
+	CreateTime   time.Time `json:"create_time"`
+	MaxSeq       int64     `json:"max_seq"`
+}
+
+func CreateGroup(Name string, Introduction string, OwnerId int64) (*CreateGroupResp, error) {
+	g := &model.Group{
+		OwnerId:      OwnerId,
+		Name:         Name,
+		Introduction: Introduction,
+		UserNum:      1,
+		CreateTime:   time.Now(),
+		UpdateTime:   time.Now(),
+		MaxSeq:       0,
+	}
+
+	err := dao.RS.CreateGroup(g)
+	if err != nil {
+		logrus.Errorf("[service] CreateGroup %+v", err)
+		return nil, err
+	}
+
+	resp := &CreateGroupResp{
+		GroupId:      g.GroupId,
+		OwnerId:      g.OwnerId,
+		Name:         g.Name,
+		Introduction: g.Introduction,
+		UserNum:      g.UserNum,
+		CreateTime:   g.CreateTime,
+		MaxSeq:       g.MaxSeq,
+	}
+	return resp, nil
+}
