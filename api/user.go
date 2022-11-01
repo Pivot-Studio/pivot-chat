@@ -183,6 +183,7 @@ func Login(ctx *gin.Context) {
 			"token": token,
 			"user_id" : user.UserId,
 			"user_name": user.UserName,
+			"email": user.Email,
 		},
 	})
 	return
