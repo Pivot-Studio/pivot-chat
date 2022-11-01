@@ -43,7 +43,7 @@ func auth(email string, password string) (*model.User, bool) {
 	user := &model.User{}
 	err := dao.RS.GetUserByEmail(user, email)
 	if err != nil {
-		logrus.Fatalf("[Service.Auth] GetUserByEmail file %+v", err)
+		logrus.Errorf("[Service.Auth] GetUserByEmail file %+v", err)
 		return nil, false
 	}
 	return user, util.ComparePassword(user.Password, password)
