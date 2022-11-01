@@ -80,6 +80,7 @@ func CreateGroup(ctx *gin.Context) {
 	resp, err = service.CreateGroup(p.Name, p.Introduction, user.UserId)
 	if err != nil {
 		logrus.Errorf("[api.CreateGroup] %+v", err)
+		resp = &service.CreateGroupResp{}
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"msg":  "创建失败, 服务器错误",
 			"data": *resp,
