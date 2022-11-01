@@ -14,7 +14,7 @@ import (
 )
 
 type registerParam struct {
-	UserName string `form:"username" binding:"required"`
+	UserName string `form:"user_name" binding:"required"`
 	Password string `form:"password" binding:"required"`
 	Email    string `form:"email" binding:"required"`
 	Captcha  string `form:"captcha" binding:"required"`
@@ -30,7 +30,7 @@ type emailParam struct {
 }
 
 type findUserByIdParam struct {
-	UserId int64 `form:"userid" binding:"required"`
+	UserId int64 `form:"user_id" binding:"required"`
 }
 
 func ChgPwd(ctx *gin.Context) {

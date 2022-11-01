@@ -94,7 +94,7 @@ func FindUserById(ctx *gin.Context, userid int64) (data map[string]interface{}, 
 		logrus.Fatalf("[Service.FindUserById] FindUserById %+v", err)
 		return nil, err
 	}
-	data["username"] = user.UserName
+	data["user_name"] = user.UserName
 	data["user_id"] = user.UserId
 	data["email"] = user.Email
 	return data, nil
