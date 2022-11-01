@@ -24,19 +24,19 @@ type GetMyGroupResp struct {
 	CreateTime   time.Time `json:"create_time"`
 }
 
-func Login(email string, password string) (token string, err error) {
+func Login(email string, password string) (user *model.User, token string, err error) {
 	user, valid := auth(email, password)
 	if !valid {
 		logrus.Errorf("[Service.Login] auth %+v", err)
-		return "", constant.UnLoginPwdErr
+		return nil, "", constant.UnLoginPwdErr
 	}
 	token, err = util.GenerateToken(user)
 	if err != nil {
 		logrus.Errorf("[Service.Login] GenerateToken %+v", err)
-		return "", errors.New("生成token失败")
+		return nil, "", errors.New("生成token失败")
 	}
 	// AddToken(token, user.Email)
-	return token, nil
+	return user, token, nil
 }
 func auth(email string, password string) (*model.User, bool) {
 	user := &model.User{}

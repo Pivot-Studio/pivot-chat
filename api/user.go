@@ -176,10 +176,14 @@ func Login(ctx *gin.Context) {
 		})
 		return
 	}
-	token, err := service.Login(p.Email, p.Password)
+	user, token, err := service.Login(p.Email, p.Password)
 	ctx.JSON(http.StatusOK, gin.H{
 		"msg":  "登录成功",
-		"data": token,
+		"data": gin.H{
+			"token": token,
+			"user_id" : user.UserId,
+			"user_name": user.UserName,
+		},
 	})
 	return
 
