@@ -151,9 +151,9 @@ func HandlePackage(bytes []byte, conn *service.Conn) {
 		fmt.Println("UNKNOWN")
 	case PackageType_PT_SIGN_IN:
 		fmt.Println("SIGN_IN")
-	case PackageType_PT_SYNC:
-		fmt.Println("SYNC")
-		err = Sync(input.Data.GroupMessageSyncInput, conn.UserId)
+	// case PackageType_PT_SYNC:
+	// 	fmt.Println("SYNC")
+	// 	err = Sync(input.Data.GroupMessageSyncInput, conn.UserId)
 	case PackageType_PT_HEARTBEAT:
 		fmt.Println("HEARTBEAT")
 	case PackageType_PT_MESSAGE:
@@ -178,11 +178,11 @@ func Message(data model.GroupMessageInput, userId int64) error {
 	return HandleGroupMessage(&data)
 }
 
-func Sync(data model.GroupMessageSyncInput, userId int64) error {
-	data.UserId = userId
-	fmt.Printf("%+v\n", data)
-	return HandleSync(&data)
-}
+// func Sync(data model.GroupMessageSyncInput, userId int64) error {
+// 	data.UserId = userId
+// 	fmt.Printf("%+v\n", data)
+// 	return HandleSync(&data)
+// }
 
 func UserJoinGroup(data model.UserJoinGroupInput, userId int64) error {
 	data.UserId = userId

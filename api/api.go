@@ -19,6 +19,7 @@ func useRouter(r *gin.Engine) {
 		group := api.Group("/group")
 		{
 			group.GET("/getMembersbyGroupId", GetMembersByGroupId)
+			group.GET("/sync", Sync)
 
 		}
 
