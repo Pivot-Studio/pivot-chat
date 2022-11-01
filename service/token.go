@@ -85,7 +85,7 @@ func WSLoginAuth(tokenString string) (user *model.User, err error) {
 	preToken := GetToken(curTokenemail)
 	if preToken == "" {
 		user = &model.User{
-			UserId: int64(curTokenid),
+			UserId: curTokenid,
 			Email:  curTokenemail,
 		}
 		return user, nil
@@ -125,7 +125,7 @@ func GetUserFromAuth(ctx *gin.Context) (user *model.User, err error) {
 	email, ok0 := claim["email"].(string)
 	uid, ok1 := claim["id"].(float64)
 	if !ok0 || !ok1 {
-		return nil,  constant.UnLoginErr
+		return nil, constant.UnLoginErr
 	}
 
 	user = &model.User{
@@ -134,7 +134,7 @@ func GetUserFromAuth(ctx *gin.Context) (user *model.User, err error) {
 	}
 	valid := JudgeToken(tokenString, email)
 	if !valid {
-		return nil,  constant.TokenLayoutErr
+		return nil, constant.TokenLayoutErr
 	}
-	return user,  nil
+	return user, nil
 }

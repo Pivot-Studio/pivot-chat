@@ -17,7 +17,7 @@ var GroupOp GroupOperator
 type Group_ struct {
 	group   *model.Group
 	Members *[]model.GroupUser
-	sync.Mutex
+	sync.RWMutex
 }
 type GroupOperator struct {
 	Groups    []*Group_
@@ -222,7 +222,7 @@ func (gpo *GroupOperator) SaveGroupMessage(SendInfo *model.GroupMessageInput) er
 	return nil
 }
 
-// GetUsersByGroupId 根据GroupID获取当前members
+// GetMembersByGroupId GetUsersByGroupId 根据GroupID获取当前members
 func (gpo *GroupOperator) GetMembersByGroupId(ctx *gin.Context, groupID int64) ([]map[string]interface{}, error) {
 	_, err := GetUserFromAuth(ctx)
 	if err != nil {
@@ -233,18 +233,29 @@ func (gpo *GroupOperator) GetMembersByGroupId(ctx *gin.Context, groupID int64) (
 		logrus.Errorf("[service.GetMembersByGroupId] GetGroup %+v", err)
 		return nil, constant.GroupGetMembersErr
 	}
-	members := g.Members
-	data := make([]map[string]interface{}, 0)
-	var member map[string]interface{}
-	var i = 0
-	for ; i < len(*members); i++ {
-		member, err = FindUserById(ctx, (*members)[i].UserId)
-		member["type_in_group"] = (*members)[i].MemberType
+	// copy一遍以免遍历出现并发问题
+	var members []model.GroupUser
+	copy(members, *g.Members)
+
+	ret := make([]map[string]interface{}, 0)
+	for _, member := range members {
+		data := make(map[string]interface{})
+		user := &model.User{}
+		user.UserId = member.UserId
+		err = dao.RS.GetUserbyId(user)
+		if err != nil {
+			logrus.Errorf("[service.GetMembersByGroupId] GetUserbyId %+v", err)
+			continue
+		}
+		data["user_name"] = user.UserName
+		data["user_id"] = user.UserId
+		data["email"] = user.Email
+		data["type_in_group"] = member.MemberType
 		if err != nil {
 			logrus.Errorf("[service.GetMembersByGroupId] GetGroup %+v", err)
 			return nil, constant.GroupGetMembersErr
 		}
-		data = append(data, member)
+		ret = append(ret, data)
 	}
-	return data, nil
+	return ret, nil
 }

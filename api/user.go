@@ -52,7 +52,7 @@ func ChgPwd(ctx *gin.Context) {
 		})
 		return
 	}
-	err = service.ChgPwd(ctx, p.Email, p.OldPwd, passwordHash)
+	err = service.ChgPwd(p.Email, p.OldPwd, passwordHash)
 
 	if err != nil {
 		logrus.Errorf("[chgPwd] %+v", err)
@@ -113,7 +113,7 @@ func Register(ctx *gin.Context) {
 		})
 		return
 	}
-	err = service.Register(ctx, &model.User{
+	err = service.Register(&model.User{
 		Password: passwordHash,
 		Email:    p.Email,
 		UserName: p.UserName,
@@ -183,4 +183,26 @@ func Login(ctx *gin.Context) {
 	})
 	return
 
+}
+
+func GetMyGroups(ctx *gin.Context) {
+	user, err := service.GetUserFromAuth(ctx)
+	if err != nil {
+		logrus.Fatalf("[api.GetMyGroups] GetUserFromAuth %+v", err)
+	}
+
+	g, err := service.GetMyGroups(user.UserId)
+	if err != nil {
+		logrus.Errorf("[api.GetMyGroups] %+v", err)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg":  "查询失败",
+			"data": nil,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"msg":  "查询成功",
+		"data": *g,
+	})
 }

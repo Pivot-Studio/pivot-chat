@@ -2,8 +2,8 @@ package dao
 
 import (
 	"errors"
-
 	"github.com/Pivot-Studio/pivot-chat/model"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -71,4 +71,14 @@ func (rs *RdbService) ChangeUserName(user *model.User, newUserName string) (err 
 
 func (rs *RdbService) GetUserByEmail(user *model.User, Email string) error {
 	return rs.tx.Table("users").Where("email = ?", Email).First(user).Error
+}
+
+func (rs *RdbService) GetMyGroups(UserId int64) ([]model.Group, error) {
+	var groups []model.Group
+	err := rs.tx.Table("groups").Where("owner_id = ?", UserId).Find(&groups).Error
+	if err != nil {
+		logrus.Errorf("[dao.GetMyGroups] %+v", err)
+		return nil, err
+	}
+	return groups, nil
 }

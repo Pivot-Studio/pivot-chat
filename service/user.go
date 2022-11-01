@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/Pivot-Studio/pivot-chat/util"
 	"gorm.io/gorm"
@@ -13,6 +14,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
+
+type GetMyGroupResp struct {
+	GroupId      int64     `json:"group_id"`
+	OwnerId      int64     `json:"owner_id"`
+	Name         string    `json:"name"`
+	Introduction string    `json:"introduction"`
+	UserNum      int32     `json:"user_num"`
+	CreateTime   time.Time `json:"create_time"`
+}
 
 func Login(email string, password string) (token string, err error) {
 	user, valid := auth(email, password)
@@ -37,7 +47,7 @@ func auth(email string, password string) (*model.User, bool) {
 	}
 	return user, util.ComparePassword(user.Password, password)
 }
-func Register(ctx *gin.Context, user *model.User, captcha string) (err error) {
+func Register(user *model.User, captcha string) (err error) {
 	//邮箱验证码部分
 	codeKey := CHAT_CODE_PREFIX + user.Email
 	res, err := dao.Cache.Get(context.Background(), codeKey).Result()
@@ -61,6 +71,7 @@ func Register(ctx *gin.Context, user *model.User, captcha string) (err error) {
 }
 
 func FindUserById(ctx *gin.Context, userid int64) (data map[string]interface{}, err error) {
+	data = make(map[string]interface{})
 	_, err = GetUserFromAuth(ctx)
 	if err != nil {
 		return nil, err
@@ -78,6 +89,28 @@ func FindUserById(ctx *gin.Context, userid int64) (data map[string]interface{}, 
 	return data, nil
 }
 
-func ChgPwd(ctx *gin.Context, email string, oldPwd string, newPwd string) error {
+func ChgPwd(email string, oldPwd string, newPwd string) error {
 	return dao.RS.ChangeUserPwd(email, oldPwd, newPwd)
+}
+
+func GetMyGroups(UserId int64) (*[]GetMyGroupResp, error) {
+	RawGroups, err := dao.RS.GetMyGroups(UserId)
+	if err != nil {
+		logrus.Errorf("[service.GetMyGroups] %+v", err)
+		return nil, err
+	}
+
+	var groups []GetMyGroupResp
+	for _, r := range RawGroups {
+		groups = append(groups, GetMyGroupResp{
+			GroupId:      r.GroupId,
+			OwnerId:      r.OwnerId,
+			Name:         r.Name,
+			Introduction: r.Introduction,
+			UserNum:      r.UserNum,
+			CreateTime:   r.CreateTime,
+		})
+	}
+
+	return &groups, nil
 }
