@@ -234,11 +234,12 @@ func (gpo *GroupOperator) GetMembersByGroupId(ctx *gin.Context, groupID int64) (
 		return nil, constant.GroupGetMembersErr
 	}
 	members := g.Members
-	var data []map[string]interface{}
+	data := make([]map[string]interface{}, 0)
 	var member map[string]interface{}
 	var i = 0
 	for ; i < len(*members); i++ {
 		member, err = FindUserById(ctx, (*members)[i].UserId)
+		member["type_in_group"] = (*members)[i].MemberType
 		if err != nil {
 			logrus.Errorf("[service.GetMembersByGroupId] GetGroup %+v", err)
 			return nil, constant.GroupGetMembersErr

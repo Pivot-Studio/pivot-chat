@@ -24,6 +24,7 @@ func HandleJoinGroup(meg *model.UserJoinGroupInput) error {
 }
 
 func GetMembersByGroupId(ctx *gin.Context) {
+
 	p := &getMembersByGroupIdParam{}
 	err := ctx.ShouldBind(p)
 	if err != nil {
