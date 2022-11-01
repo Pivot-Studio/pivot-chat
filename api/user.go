@@ -176,6 +176,13 @@ func Login(ctx *gin.Context) {
 		return
 	}
 	user, token, err := service.Login(p.Email, p.Password)
+	if err != nil {
+		logrus.Errorf("[Login] %+v", err)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "登录失败" + err.Error(),
+		})
+		return
+	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"msg": "登录成功",
 		"data": gin.H{
