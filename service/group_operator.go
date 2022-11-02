@@ -51,9 +51,18 @@ func (gpo *GroupOperator) GetGroup(groupID int64) (*Group_, error) {
 			logrus.Errorf("[service.GetGroup] QueryGroup %+v", err)
 			return nil, constant.NotGroupRecordErr
 		}
+
+		members, err := dao.RS.GetGroupUsers(groupID)
+		if err != nil {
+			gpo.lock.Unlock()
+			logrus.Errorf("[service.SaveGroupMessage] GetGrupUsers %+v", err)
+			return nil, constant.GroupGetMembersErr
+		}
 		//缓存Group
 		value = &Group_{
-			group: g,
+			group:   g,
+			Members: members,
+			RWMutex: sync.RWMutex{},
 		}
 		gpo.StoreGroup(groupID, value.(*Group_))
 	}
