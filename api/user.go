@@ -224,3 +224,31 @@ func GetMyGroups(ctx *gin.Context) {
 	})
 
 }
+
+func GetMyJoinedGroups(ctx *gin.Context) {
+	user, err := service.GetUserFromAuth(ctx)
+	if err != nil {
+		logrus.Errorf("[api.GetMyGroups] GetUserFromAuth %+v", err)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "查询失败，" + err.Error(),
+		})
+		return
+	}
+
+	g, err := service.GetMyJoinedGroups(user.UserId)
+
+	if err != nil {
+		logrus.Errorf("[api.GetMyGroups] %+v", err)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg":  "查询失败",
+			"data": *g,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"msg":  "查询成功",
+		"data": *g,
+	})
+
+}

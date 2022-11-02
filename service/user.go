@@ -127,3 +127,26 @@ func GetMyGroups(UserId int64) (*[]GetMyGroupResp, error) {
 
 	return &groups, nil
 }
+
+func GetMyJoinedGroups(UserId int64) (*[]GetMyGroupResp, error) {
+	RawGroups, err := dao.RS.GetMyJoinedGroups(UserId)
+	if err != nil {
+		logrus.Errorf("[service.GetMyJoinedGroups] %+v", err)
+		return nil, err
+	}
+
+	groups := make([]GetMyGroupResp, 0)
+	for _, r := range RawGroups {
+		groups = append(groups, GetMyGroupResp{
+			GroupId:      r.GroupId,
+			OwnerId:      r.OwnerId,
+			Name:         r.Name,
+			Introduction: r.Introduction,
+			UserNum:      r.UserNum,
+			MaxSeq:       r.MaxSeq,
+			CreateTime:   r.CreateTime,
+		})
+	}
+
+	return &groups, nil
+}

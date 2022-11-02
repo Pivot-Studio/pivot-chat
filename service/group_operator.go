@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"sync"
 	"time"
 
@@ -107,13 +106,7 @@ func (g *Group_) SendGroupMessage(sendInfo *model.GroupMessageInput, seq int64) 
 				Type:     sendInfo.Type,
 			}
 
-			bytes, err := json.Marshal(output)
-			if err != nil {
-				logrus.Errorf("[service.SendGroupMessage] json Marshal %+v", err)
-				return
-			}
-
-			err = SendToUser(user.UserId, bytes, PackageType_PT_MESSAGE)
+			err := SendToUser(user.UserId, output, PackageType_PT_MESSAGE)
 			if err != nil {
 				logrus.Errorf("[service.SendGroupMessage] group SendToUser %+v", err)
 				return

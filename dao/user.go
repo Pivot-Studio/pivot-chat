@@ -82,3 +82,22 @@ func (rs *RdbService) GetMyGroups(UserId int64) ([]model.Group, error) {
 	}
 	return groups, nil
 }
+
+func (rs *RdbService) GetMyJoinedGroups(UserId int64) ([]model.Group, error) {
+	var group_users []model.GroupUser
+	err := rs.tx.Table("group_users").Where("user_id = ?", UserId).Find(&group_users).Error
+	if err != nil {
+		logrus.Errorf("[dao.GetMyJoinedGroups] %+v", err)
+		return nil, err
+	}
+	ret := make([]model.Group, 0)
+	for _, user := range group_users {
+		group, err := RS.QueryGroup(user.GroupId)
+		if err != nil {
+			logrus.Errorf("[dao.GetMyJoinedGroups.QueryGroup] %+v", err)
+			continue
+		}
+		ret = append(ret, *group)
+	}
+	return ret, nil
+}
