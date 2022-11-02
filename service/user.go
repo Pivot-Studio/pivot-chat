@@ -111,7 +111,7 @@ func GetMyGroups(UserId int64) (*[]GetMyGroupResp, error) {
 		return nil, err
 	}
 
-	var groups []GetMyGroupResp
+	groups := make([]GetMyGroupResp, 0)
 	for _, r := range RawGroups {
 		groups = append(groups, GetMyGroupResp{
 			GroupId:      r.GroupId,
