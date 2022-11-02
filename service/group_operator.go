@@ -139,6 +139,7 @@ func (gpo *GroupOperator) JoinGroup(input *model.UserJoinGroupInput) error {
 	}
 
 	g.Lock()
+	defer g.Unlock()
 	if g.IsMember(input.UserId) {
 		return nil
 	}
@@ -150,14 +151,14 @@ func (gpo *GroupOperator) JoinGroup(input *model.UserJoinGroupInput) error {
 	if err != nil {
 		return err
 	}
-	//缓存放最后更新, 保证缓存与数据库同步
+	// 缓存放最后更新, 保证缓存与数据库同步
 	*g.Members = append(*g.Members, groupUser)
 	g.group.UserNum += 1
 
-	//广播通知其他用户
+	// 给加入的用户回复消息
 	output := model.UserJoinGroupOutput{
-		UserId:       input.UserId,
 		GroupId:      g.group.GroupId,
+		OwnerId:      g.group.OwnerId,
 		Name:         g.group.Name,
 		Introduction: g.group.Introduction,
 		UserNum:      g.group.UserNum,
@@ -165,11 +166,9 @@ func (gpo *GroupOperator) JoinGroup(input *model.UserJoinGroupInput) error {
 	}
 	err = SendToUser(input.UserId, output, PackageType_PT_JOINGROUP)
 	if err != nil {
-		g.Unlock()
 		logrus.Fatalf("[Service] UserJoinGroup %+v", err)
 		return err
 	}
-	g.Unlock()
 	return nil
 }
 
@@ -206,6 +205,7 @@ func (gpo *GroupOperator) SaveGroupMessage(SendInfo *model.GroupMessageInput) er
 	err = dao.RS.IncrGroupSeq(g.group.GroupId)
 	if err != nil {
 		logrus.Errorf("[Service.SaveGroupMessage] IncrGroupSeq %+v", err)
+		g.Unlock()
 		return err
 	}
 	//持久化到DB
