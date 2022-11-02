@@ -67,6 +67,7 @@ func (gpo *GroupOperator) GetGroup(groupID int64) (*Group_, error) {
 	g := value.(*Group_)
 	//更新群组成员
 	g.Lock()
+
 	if g.group.UserNum != int32(len(*g.Members)) {
 		var err error
 		g.Members, err = dao.RS.GetGroupUsers(g.group.GroupId)

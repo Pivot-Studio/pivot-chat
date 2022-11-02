@@ -22,6 +22,7 @@ type GetMyGroupResp struct {
 	Name         string    `json:"name"`
 	Introduction string    `json:"introduction"`
 	UserNum      int32     `json:"user_num"`
+	MaxSeq       int64     `json:"max_seq"`
 	CreateTime   time.Time `json:"create_time"`
 }
 
@@ -119,6 +120,7 @@ func GetMyGroups(UserId int64) (*[]GetMyGroupResp, error) {
 			Name:         r.Name,
 			Introduction: r.Introduction,
 			UserNum:      r.UserNum,
+			MaxSeq:       r.MaxSeq,
 			CreateTime:   r.CreateTime,
 		})
 	}
