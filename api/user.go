@@ -175,6 +175,7 @@ func Login(ctx *gin.Context) {
 		})
 		return
 	}
+
 	user, token, err := service.Login(p.Email, p.Password)
 	if err != nil {
 		logrus.Errorf("[Login] %+v", err)
