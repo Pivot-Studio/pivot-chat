@@ -1,11 +1,9 @@
 package service
 
 import (
-
 	"github.com/Pivot-Studio/pivot-chat/constant"
 	"github.com/Pivot-Studio/pivot-chat/dao"
 	"github.com/Pivot-Studio/pivot-chat/model"
-	"github.com/Pivot-Studio/pivot-chat/util"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -33,15 +31,15 @@ func Sync(ctx *gin.Context, input *model.GroupMessageSyncInput) (*model.GroupMes
 	// }
 	groupMessageOutput := make([]model.GroupMessageOutput, 0)
 	for _, meg := range megs {
-		content, err := util.AESdecrypt(meg.Content)
-		if err != nil {
-			logrus.Errorf("[Service.Sync] 消息解密失败" + err.Error())
-			continue
-		}
+		// content, err := util.AESdecrypt(meg.Content)
+		// if err != nil {
+		// 	logrus.Errorf("[Service.Sync] 消息解密失败" + err.Error())
+		// 	continue
+		// }
 		groupMessageOutput = append(groupMessageOutput, model.GroupMessageOutput{
 			UserId:   input.UserId,
 			GroupId:  meg.ReceiverId,
-			Data:     content,
+			Data:     meg.Content,
 			SenderId: meg.SenderId,
 			Seq:      meg.Seq,
 			ReplyTo:  meg.ReplyTo,
