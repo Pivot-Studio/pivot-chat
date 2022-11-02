@@ -24,8 +24,8 @@ type UserJoinGroupInput struct {
 }
 
 type UserJoinGroupOutput struct {
-	UserId       int64     `json:"user_id"`
-	GroupId      int64     `json:"group_id"`     // 群组id
+	GroupId      int64     `json:"group_id"` // 群组id
+	OwnerId      int64     `json:"owner_id"`
 	Name         string    `json:"name"`         // 组名
 	Introduction string    `json:"introduction"` // 群简介
 	UserNum      int32     `json:"user_num"`     // 群组人数
