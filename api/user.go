@@ -199,7 +199,11 @@ func Login(ctx *gin.Context) {
 func GetMyGroups(ctx *gin.Context) {
 	user, err := service.GetUserFromAuth(ctx)
 	if err != nil {
-		logrus.Fatalf("[api.GetMyGroups] GetUserFromAuth %+v", err)
+		logrus.Errorf("[api.GetMyGroups] GetUserFromAuth %+v", err)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg":  "查询失败，" + err.Error(),
+		})
+		return
 	}
 
 	g, err := service.GetMyGroups(user.UserId)

@@ -175,7 +175,7 @@ func (gpo *GroupOperator) JoinGroup(input *model.UserJoinGroupInput) error {
 	}
 	err = SendToUser(input.UserId, output, PackageType_PT_JOINGROUP)
 	if err != nil {
-		logrus.Fatalf("[Service] UserJoinGroup %+v", err)
+		logrus.Errorf("[Service] UserJoinGroup %+v", err)
 		return err
 	}
 	return nil

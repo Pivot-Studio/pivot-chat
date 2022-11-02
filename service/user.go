@@ -91,7 +91,7 @@ func FindUserById(ctx *gin.Context, userid int64) (data map[string]interface{}, 
 	user.UserId = userid
 	err = dao.RS.GetUserbyId(user)
 	if err != nil {
-		logrus.Fatalf("[Service.FindUserById] FindUserById %+v", err)
+		logrus.Errorf("[Service.FindUserById] FindUserById %+v", err)
 		return nil, err
 	}
 	data["user_name"] = user.UserName

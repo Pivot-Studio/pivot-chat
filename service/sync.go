@@ -19,7 +19,7 @@ func Sync(ctx *gin.Context, input *model.GroupMessageSyncInput) (*model.GroupMes
 		return nil, err
 	}
 	if !g.IsMember(input.UserId) {
-		logrus.Fatalf("[Service] | sync error: user isn't in group | input:", input)
+		logrus.Errorf("[Service] | sync error: user isn't in group | input:%+v", input)
 		return nil, constant.UserNotMatchGroup
 	}
 	megs, err := dao.RS.SyncMessage(input.GroupId, input.SyncSeq, int(input.Limit), input.IsNew)
