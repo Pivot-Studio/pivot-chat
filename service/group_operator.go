@@ -2,12 +2,14 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"sync"
 	"time"
 
 	"github.com/Pivot-Studio/pivot-chat/constant"
 	"github.com/Pivot-Studio/pivot-chat/dao"
 	"github.com/Pivot-Studio/pivot-chat/model"
+	"github.com/Pivot-Studio/pivot-chat/util"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -196,11 +198,15 @@ func (gpo *GroupOperator) SaveGroupMessage(SendInfo *model.GroupMessageInput) er
 		return constant.UserNotMatchGroup
 	}
 
+	content, err := util.AESencrypt(SendInfo.Data)
+	if err != nil {
+		return errors.New("消息加密失败" + err.Error())
+	}
 	//开始持久化
 	meg := &model.Message{
 		SenderId:   SendInfo.UserId,
 		ReceiverId: SendInfo.GroupId,
-		Content:    SendInfo.Data,
+		Content:    content,
 		SendTime:   time.Now(),
 	}
 	//保证MaxSeq是正确的, 需要加锁
