@@ -134,7 +134,7 @@ func GetUserFromAuth(ctx *gin.Context) (user *model.User, err error) {
 	}
 	valid := JudgeToken(tokenString, email)
 	if !valid {
-		return nil, constant.TokenLayoutErr
+		return nil, errors.New("[GetUserFromAuth] JudgeToken err")
 	}
 	return user, nil
 }
