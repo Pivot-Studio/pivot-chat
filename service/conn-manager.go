@@ -21,7 +21,7 @@ func SendToUser(userID int64, data interface{}, infoType PackageType) error {
 
 func walk(key, value interface{}) bool {
 	fmt.Println("Key =", key, "Value =", value)
-	return false
+	return true
 }
 
 // SetConn 存储
