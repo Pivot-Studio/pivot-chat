@@ -279,9 +279,13 @@ type CreateGroupResp struct {
 	MaxSeq       int64     `json:"max_seq"`
 }
 
-func CreateGroup(Name string, Introduction string, OwnerId int64) (*CreateGroupResp, error) {
+func CreateGroup(ctx *gin.Context, Name string, Introduction string) (*CreateGroupResp, error) {
+	user, err := GetUserFromAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
 	g := &model.Group{
-		OwnerId:      OwnerId,
+		OwnerId:      user.UserId,
 		Name:         Name,
 		Introduction: Introduction,
 		UserNum:      1,
@@ -290,11 +294,20 @@ func CreateGroup(Name string, Introduction string, OwnerId int64) (*CreateGroupR
 		MaxSeq:       0,
 	}
 
-	err := dao.RS.CreateGroup(g)
+	err = dao.RS.CreateGroup(g)
 	if err != nil {
 		logrus.Errorf("[service] CreateGroup %+v", err)
 		return nil, err
 	}
+
+	err = dao.RS.CreateGroupUser([]*model.GroupUser{{
+		GroupId:     g.GroupId,
+		UserId:      user.UserId,
+		MemberType:  model.OWNER,
+		Status:      0,
+		CreateTime:  time.Now(),
+		UpdateTime:  time.Now(),
+	}})
 
 	resp := &CreateGroupResp{
 		GroupId:      g.GroupId,
