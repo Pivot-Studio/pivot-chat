@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -18,13 +19,24 @@ func SendToUser(userID int64, data interface{}, infoType PackageType) error {
 	return err
 }
 
+func walk(key, value interface{}) bool {
+	fmt.Println("Key =", key, "Value =", value)
+	return false
+}
+
 // SetConn 存储
 func SetConn(userID int64, conn *Conn) {
+	fmt.Println("Before SetConn")
+	ConnsManager.Range(walk)
 	ConnsManager.Store(userID, conn)
+	fmt.Println("After SetConn")
+	ConnsManager.Range(walk)
 }
 
 // GetConn 获取
 func GetConn(userID int64) *Conn {
+	fmt.Println("GetConn")
+	ConnsManager.Range(walk)
 	value, ok := ConnsManager.Load(userID)
 	if ok {
 		return value.(*Conn)
@@ -34,6 +46,8 @@ func GetConn(userID int64) *Conn {
 
 // DeleteConn 删除
 func DeleteConn(userID int64) {
+	fmt.Println("Before DeleteConn")
+	ConnsManager.Range(walk)
 	value, ok := ConnsManager.LoadAndDelete(userID)
 	if ok {
 		err := value.(*Conn).WS.Close()
@@ -42,5 +56,7 @@ func DeleteConn(userID int64) {
 		}
 		logrus.Info("delete user:", userID, " Conn!")
 	}
+	fmt.Println("After DeleteConn")
+	ConnsManager.Range(walk)
 	return
 }
