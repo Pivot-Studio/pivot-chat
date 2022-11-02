@@ -85,7 +85,7 @@ func (gpo *GroupOperator) GetGroup(groupID int64) (*Group_, error) {
 }
 
 // SendGroupMessage 群发消息, 无锁
-func (g *Group_) SendGroupMessage(sendInfo *model.GroupMessageInput, seq int64) {
+func (g *Group_) SendGroupMessage(sendInfo *model.GroupMessageInput, seq int64, curtime time.Time) {
 	// 将消息发送给群组用户
 	// 复制一份以免遍历时改变group导致错误, 这里也可以考虑加锁, 但是这样会更快一点
 	g.RLock()
@@ -104,6 +104,7 @@ func (g *Group_) SendGroupMessage(sendInfo *model.GroupMessageInput, seq int64) 
 				Seq:      seq,
 				ReplyTo:  sendInfo.ReplyTo,
 				Type:     sendInfo.Type,
+				Time:     curtime,
 			}
 
 			err := SendToUser(user.UserId, output, PackageType_PT_MESSAGE)
@@ -227,7 +228,7 @@ func (gpo *GroupOperator) SaveGroupMessage(SendInfo *model.GroupMessageInput) er
 	g.Unlock()
 
 	//发送消息, 发送的成员是按现在Group的成员(可能被改变)
-	g.SendGroupMessage(SendInfo, meg.Seq)
+	g.SendGroupMessage(SendInfo, meg.Seq, meg.SendTime)
 	return nil
 }
 
