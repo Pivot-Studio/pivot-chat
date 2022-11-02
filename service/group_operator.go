@@ -205,6 +205,7 @@ func (gpo *GroupOperator) SaveGroupMessage(SendInfo *model.GroupMessageInput) er
 	err = dao.RS.IncrGroupSeq(g.group.GroupId)
 	if err != nil {
 		logrus.Errorf("[Service.SaveGroupMessage] IncrGroupSeq %+v", err)
+		g.Unlock()
 		return err
 	}
 	//持久化到DB
