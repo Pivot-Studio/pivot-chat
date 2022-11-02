@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"sync"
 	"time"
 
@@ -101,19 +100,14 @@ func (g *Group_) SendGroupMessage(sendInfo *model.GroupMessageInput, seq int64) 
 				Type:     sendInfo.Type,
 			}
 
-			bytes, err := json.Marshal(output)
-			if err != nil {
-				logrus.Fatalf("[service.SendGroupMessage] json Marshal %+v", err)
-				return
-			}
-
-			err = SendToUser(user0.UserId, bytes, PackageType_PT_MESSAGE)
+			err := SendToUser(user0.UserId, output, PackageType_PT_MESSAGE)
 			if err != nil {
 				logrus.Fatalf("[service.SendGroupMessage] group SendToUser %+v", err)
 				return
 			}
 		}(&user0, sendInfo)
 	}
+	logrus.Info("Send megs to group %d, member num:%d", g.group.GroupId, len(members))
 }
 
 // UpdateGroup todo 修改群组信息
