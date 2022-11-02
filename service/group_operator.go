@@ -301,12 +301,12 @@ func CreateGroup(ctx *gin.Context, Name string, Introduction string) (*CreateGro
 	}
 
 	err = dao.RS.CreateGroupUser([]*model.GroupUser{{
-		GroupId:     g.GroupId,
-		UserId:      user.UserId,
-		MemberType:  model.OWNER,
-		Status:      0,
-		CreateTime:  time.Now(),
-		UpdateTime:  time.Now(),
+		GroupId:    g.GroupId,
+		UserId:     user.UserId,
+		MemberType: model.OWNER,
+		Status:     0,
+		CreateTime: time.Now(),
+		UpdateTime: time.Now(),
 	}})
 
 	resp := &CreateGroupResp{

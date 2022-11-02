@@ -26,6 +26,9 @@ func Sync(ctx *gin.Context, input *model.GroupMessageSyncInput) (*model.GroupMes
 	if err != nil {
 		return nil, err
 	}
+	// if len(megs) <= 0 {
+	// 	return nil, errors.New("未找到符合条件的消息")
+	// }
 	groupMessageOutput := make([]model.GroupMessageOutput, 0)
 	for _, meg := range megs {
 		groupMessageOutput = append(groupMessageOutput, model.GroupMessageOutput{
@@ -38,6 +41,15 @@ func Sync(ctx *gin.Context, input *model.GroupMessageSyncInput) (*model.GroupMes
 			Type:     meg.Type,
 			Time:     meg.SendTime,
 		})
+	}
+	if len(megs) <= 0 {
+		output := model.GroupMessageSyncOutput{
+			UserId:  input.UserId,
+			GroupId: input.GroupId,
+			Data:    groupMessageOutput,
+			MaxSeq:  0,
+		}
+		return &output, nil
 	}
 	output := model.GroupMessageSyncOutput{
 		UserId:  input.UserId,
