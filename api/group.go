@@ -68,7 +68,7 @@ func CreateGroup(ctx *gin.Context) {
 		})
 	}
 
-	resp, err = service.CreateGroup(p.Name, p.Introduction)
+	resp, err = service.CreateGroup(ctx, p.Name, p.Introduction)
 	if err != nil {
 		logrus.Errorf("[api.CreateGroup] %+v", err)
 		resp = &service.CreateGroupResp{}
