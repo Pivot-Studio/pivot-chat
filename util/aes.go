@@ -4,8 +4,11 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 )
+
 var commonIV = []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
-const keyText = "AFGTJF-dgsein_n4230i49vwe3qjt8q-43tn34tyq8"
+
+const keyText = "ByEZubdrmnsk7JHqtNL4ZIjAurz4vgOxQ2sXiz5PptRRdbG2Jn2wjSMUqvOUYMaZ2ZWUpZHWm9pFlEBykuxTjsZo91hxVNb3lixfXEzYWpcZBX1rh8Tq5AvQqaDA2tQN"
+
 func AESencrypt(plainText string) (cipherByte []byte, err error) {
 	// 转换成字节数据, 方便加密
 	plainByte := []byte(plainText)
