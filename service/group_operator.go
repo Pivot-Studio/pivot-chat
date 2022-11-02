@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"sync"
 	"time"
 
@@ -26,11 +27,14 @@ type GroupOperator struct {
 
 func (g *Group_) IsMember(userID int64) bool {
 	//todo
+	g.RLock()
 	for i := range *g.Members {
 		if (*g.Members)[i].UserId == userID {
+			g.RUnlock()
 			return true
 		}
 	}
+	g.RUnlock()
 	return false
 }
 func (gpo *GroupOperator) StoreGroup(groupID int64, group *Group_) {
@@ -85,13 +89,16 @@ func (gpo *GroupOperator) GetGroup(groupID int64) (*Group_, error) {
 func (g *Group_) SendGroupMessage(sendInfo *model.GroupMessageInput, seq int64) {
 	// 将消息发送给群组用户
 	// 复制一份以免遍历时改变group导致错误, 这里也可以考虑加锁, 但是这样会更快一点
-	var members []model.GroupUser
+	g.RLock()
+	members := make([]model.GroupUser, len(*g.Members))
 	copy(members, *g.Members)
+	g.RUnlock()
+
 	for _, user := range members {
-		user0 := user
+		//user0 := user
 		go func(user *model.GroupUser, sendInfo *model.GroupMessageInput) {
 			output := model.GroupMessageOutput{
-				UserId:   user0.UserId,
+				UserId:   user.UserId,
 				GroupId:  g.group.GroupId,
 				Data:     sendInfo.Data,
 				SenderId: sendInfo.UserId,
@@ -100,14 +107,20 @@ func (g *Group_) SendGroupMessage(sendInfo *model.GroupMessageInput, seq int64) 
 				Type:     sendInfo.Type,
 			}
 
-			err := SendToUser(user0.UserId, output, PackageType_PT_MESSAGE)
+			bytes, err := json.Marshal(output)
 			if err != nil {
-				logrus.Fatalf("[service.SendGroupMessage] group SendToUser %+v", err)
+				logrus.Errorf("[service.SendGroupMessage] json Marshal %+v", err)
 				return
 			}
-		}(&user0, sendInfo)
+
+			err = SendToUser(user.UserId, bytes, PackageType_PT_MESSAGE)
+			if err != nil {
+				logrus.Errorf("[service.SendGroupMessage] group SendToUser %+v", err)
+				return
+			}
+		}(&user, sendInfo)
 	}
-	logrus.Info("Send megs to group %d, member num:%d", g.group.GroupId, len(members))
+	logrus.Infof("Send megs to group %d, member num:%d", g.group.GroupId, len(members))
 }
 
 // UpdateGroup todo 修改群组信息
@@ -237,7 +250,7 @@ func (gpo *GroupOperator) GetMembersByGroupId(ctx *gin.Context, groupID int64) (
 		return nil, constant.GroupGetMembersErr
 	}
 	// copy一遍以免遍历出现并发问题
-	var members []model.GroupUser
+	members := make([]model.GroupUser, len(*g.Members))
 	copy(members, *g.Members)
 
 	ret := make([]map[string]interface{}, 0)
