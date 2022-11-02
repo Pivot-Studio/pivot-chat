@@ -203,9 +203,12 @@ func GetMyGroups(ctx *gin.Context) {
 	}
 
 	g, err := service.GetMyGroups(user.UserId)
+	//防止null
+	if g == nil {
+		g = new([]service.GetMyGroupResp)
+	}
 	if err != nil {
 		logrus.Errorf("[api.GetMyGroups] %+v", err)
-		g = new([]service.GetMyGroupResp)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"msg":  "查询失败",
 			"data": *g,
