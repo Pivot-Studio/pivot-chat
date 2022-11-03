@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"sync"
 	"time"
 
@@ -27,11 +26,14 @@ type GroupOperator struct {
 
 func (g *Group_) IsMember(userID int64) bool {
 	//todo
+	g.RLock()
 	for i := range *g.Members {
 		if (*g.Members)[i].UserId == userID {
+			g.RUnlock()
 			return true
 		}
 	}
+	g.RUnlock()
 	return false
 }
 func (gpo *GroupOperator) StoreGroup(groupID int64, group *Group_) {
@@ -51,9 +53,13 @@ func (gpo *GroupOperator) GetGroup(groupID int64) (*Group_, error) {
 			logrus.Errorf("[service.GetGroup] QueryGroup %+v", err)
 			return nil, constant.NotGroupRecordErr
 		}
+
+		members := make([]model.GroupUser, 0)
 		//缓存Group
 		value = &Group_{
-			group: g,
+			group:   g,
+			Members: &members,
+			RWMutex: sync.RWMutex{},
 		}
 		gpo.StoreGroup(groupID, value.(*Group_))
 	}
@@ -63,6 +69,7 @@ func (gpo *GroupOperator) GetGroup(groupID int64) (*Group_, error) {
 	g := value.(*Group_)
 	//更新群组成员
 	g.Lock()
+
 	if g.group.UserNum != int32(len(*g.Members)) {
 		var err error
 		g.Members, err = dao.RS.GetGroupUsers(g.group.GroupId)
@@ -78,37 +85,36 @@ func (gpo *GroupOperator) GetGroup(groupID int64) (*Group_, error) {
 }
 
 // SendGroupMessage 群发消息, 无锁
-func (g *Group_) SendGroupMessage(sendInfo *model.GroupMessageInput, seq int64) {
+func (g *Group_) SendGroupMessage(sendInfo *model.GroupMessageInput, seq int64, curtime time.Time) {
 	// 将消息发送给群组用户
 	// 复制一份以免遍历时改变group导致错误, 这里也可以考虑加锁, 但是这样会更快一点
-	var members []model.GroupUser
+	g.RLock()
+	members := make([]model.GroupUser, len(*g.Members))
 	copy(members, *g.Members)
+	g.RUnlock()
+
 	for _, user := range members {
-		user0 := user
+		//user0 := user
 		go func(user *model.GroupUser, sendInfo *model.GroupMessageInput) {
 			output := model.GroupMessageOutput{
-				UserId:   user0.UserId,
+				UserId:   user.UserId,
 				GroupId:  g.group.GroupId,
 				Data:     sendInfo.Data,
 				SenderId: sendInfo.UserId,
 				Seq:      seq,
 				ReplyTo:  sendInfo.ReplyTo,
 				Type:     sendInfo.Type,
+				Time:     curtime,
 			}
 
-			bytes, err := json.Marshal(output)
+			err := SendToUser(user.UserId, output, PackageType_PT_MESSAGE)
 			if err != nil {
-				logrus.Fatalf("[service.SendGroupMessage] json Marshal %+v", err)
+				logrus.Errorf("[service.SendGroupMessage] group SendToUser %+v", err)
 				return
 			}
-
-			err = SendToUser(user0.UserId, bytes, PackageType_PT_MESSAGE)
-			if err != nil {
-				logrus.Fatalf("[service.SendGroupMessage] group SendToUser %+v", err)
-				return
-			}
-		}(&user0, sendInfo)
+		}(&user, sendInfo)
 	}
+	logrus.Infof("Send megs to group %d, member num:%d", g.group.GroupId, len(members))
 }
 
 // UpdateGroup todo 修改群组信息
@@ -166,7 +172,7 @@ func (gpo *GroupOperator) JoinGroup(input *model.UserJoinGroupInput) error {
 	}
 	err = SendToUser(input.UserId, output, PackageType_PT_JOINGROUP)
 	if err != nil {
-		logrus.Fatalf("[Service] UserJoinGroup %+v", err)
+		logrus.Errorf("[Service] UserJoinGroup %+v", err)
 		return err
 	}
 	return nil
@@ -191,6 +197,10 @@ func (gpo *GroupOperator) SaveGroupMessage(SendInfo *model.GroupMessageInput) er
 		return constant.UserNotMatchGroup
 	}
 
+	// content, err := util.AESencrypt(SendInfo.Data)
+	// if err != nil {
+	// 	return errors.New("消息加密失败" + err.Error())
+	// }
 	//开始持久化
 	meg := &model.Message{
 		SenderId:   SendInfo.UserId,
@@ -218,7 +228,7 @@ func (gpo *GroupOperator) SaveGroupMessage(SendInfo *model.GroupMessageInput) er
 	g.Unlock()
 
 	//发送消息, 发送的成员是按现在Group的成员(可能被改变)
-	g.SendGroupMessage(SendInfo, meg.Seq)
+	g.SendGroupMessage(SendInfo, meg.Seq, meg.SendTime)
 	return nil
 }
 
@@ -234,7 +244,7 @@ func (gpo *GroupOperator) GetMembersByGroupId(ctx *gin.Context, groupID int64) (
 		return nil, constant.GroupGetMembersErr
 	}
 	// copy一遍以免遍历出现并发问题
-	var members []model.GroupUser
+	members := make([]model.GroupUser, len(*g.Members))
 	copy(members, *g.Members)
 
 	ret := make([]map[string]interface{}, 0)
@@ -270,9 +280,13 @@ type CreateGroupResp struct {
 	MaxSeq       int64     `json:"max_seq"`
 }
 
-func CreateGroup(Name string, Introduction string, OwnerId int64) (*CreateGroupResp, error) {
+func CreateGroup(ctx *gin.Context, Name string, Introduction string) (*CreateGroupResp, error) {
+	user, err := GetUserFromAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
 	g := &model.Group{
-		OwnerId:      OwnerId,
+		OwnerId:      user.UserId,
 		Name:         Name,
 		Introduction: Introduction,
 		UserNum:      1,
@@ -281,11 +295,20 @@ func CreateGroup(Name string, Introduction string, OwnerId int64) (*CreateGroupR
 		MaxSeq:       0,
 	}
 
-	err := dao.RS.CreateGroup(g)
+	err = dao.RS.CreateGroup(g)
 	if err != nil {
 		logrus.Errorf("[service] CreateGroup %+v", err)
 		return nil, err
 	}
+
+	err = dao.RS.CreateGroupUser([]*model.GroupUser{{
+		GroupId:    g.GroupId,
+		UserId:     user.UserId,
+		MemberType: model.OWNER,
+		Status:     0,
+		CreateTime: time.Now(),
+		UpdateTime: time.Now(),
+	}})
 
 	resp := &CreateGroupResp{
 		GroupId:      g.GroupId,

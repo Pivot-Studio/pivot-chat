@@ -15,6 +15,7 @@ func useRouter(r *gin.Engine) {
 			user.POST("/login", Login)
 			user.GET("/findUserById", FindUserById)
 			user.GET("/mygroups", GetMyGroups)
+			user.GET("/myjoinedgroups", GetMyJoinedGroups)
 		}
 		group := api.Group("/group")
 		{

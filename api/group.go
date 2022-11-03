@@ -68,16 +68,7 @@ func CreateGroup(ctx *gin.Context) {
 		})
 	}
 
-	user, err := service.GetUserFromAuth(ctx)
-	if err != nil {
-		logrus.Errorf("[api.CreateGroup] GetUserFromAuth %+v", err)
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"msg":  "创建失败, 鉴权失败",
-			"data": *resp,
-		})
-	}
-
-	resp, err = service.CreateGroup(p.Name, p.Introduction, user.UserId)
+	resp, err = service.CreateGroup(ctx, p.Name, p.Introduction)
 	if err != nil {
 		logrus.Errorf("[api.CreateGroup] %+v", err)
 		resp = &service.CreateGroupResp{}

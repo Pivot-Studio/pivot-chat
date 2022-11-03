@@ -34,13 +34,11 @@ func Sync(ctx *gin.Context) {
 	}
 	ret, err := service.Sync(ctx, input)
 	if err != nil {
-		if err != nil {
-			logrus.Errorf("[Sync] %+v", err)
-			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"msg": "Sync err:" + err.Error(),
-			})
-			return
-		}
+		logrus.Errorf("[Sync] %+v", err)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "Sync err:" + err.Error(),
+		})
+		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"msg":  fmt.Sprintf("同步%d条消息成功", len(ret.Data)),
