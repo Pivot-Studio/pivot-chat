@@ -26,10 +26,6 @@ func Sync(ctx *gin.Context, input *model.GroupMessageSyncInput) (*model.GroupMes
 	if err != nil {
 		return nil, err
 	}
-	// reverse megs
-	for i, j := 0, len(megs)-1; i < j; i, j = i+1, j-1 {
-		megs[i], megs[j] = megs[j], megs[i]
-	}
 	groupMessageOutput := make([]model.GroupMessageOutput, 0)
 	// fmt.Println("-----Sync DEBUG-----")
 	for _, meg := range megs {
