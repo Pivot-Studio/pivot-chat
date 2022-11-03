@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -12,7 +13,7 @@ var ConnsManager = sync.Map{} // (userID, conn)
 func SendToUser(userID int64, data interface{}, infoType PackageType) error {
 	conn := GetConn(userID)
 	if conn == nil {
-		return errors.New("[Service] | conn-manager get connection err")
+		return errors.New(fmt.Sprintf("[Service] | conn-manager get user:%d connection err", userID))
 	}
 	err := conn.Send(data, infoType)
 	return err
