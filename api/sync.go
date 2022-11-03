@@ -13,7 +13,6 @@ type SyncParam struct {
 	GroupId int64 `form:"group_id" binding:"required"` // 群组id
 	SyncSeq int64 `form:"sync_seq" binding:"required"` // 开始同步的seq，是用户的本地seq+1
 	Limit   int64 `form:"limit" binding:"required"`
-	IsNew   int64 `form:"is_new" binding:"required"`
 }
 
 func Sync(ctx *gin.Context) {
@@ -30,7 +29,6 @@ func Sync(ctx *gin.Context) {
 		GroupId: p.GroupId,
 		SyncSeq: p.SyncSeq,
 		Limit:   p.Limit,
-		IsNew:   p.IsNew,
 	}
 	ret, err := service.Sync(ctx, input)
 	if err != nil {
