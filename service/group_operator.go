@@ -144,8 +144,6 @@ func (gpo *GroupOperator) JoinGroup(input *model.UserJoinGroupInput) error {
 		UpdateTime: time.Now(),
 	}
 
-	g.Lock()
-	defer g.Unlock()
 	if g.IsMember(input.UserId) {
 		return nil
 	}
@@ -153,13 +151,16 @@ func (gpo *GroupOperator) JoinGroup(input *model.UserJoinGroupInput) error {
 	if err != nil {
 		return err
 	}
+	g.Lock()
 	err = dao.RS.IncrGroupUserNum(g.group.GroupId)
 	if err != nil {
+		g.Unlock()
 		return err
 	}
 	// 缓存放最后更新, 保证缓存与数据库同步
 	*g.Members = append(*g.Members, groupUser)
 	g.group.UserNum += 1
+	g.Unlock()
 
 	// 给加入的用户回复消息
 	output := model.UserJoinGroupOutput{
