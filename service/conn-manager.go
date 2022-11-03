@@ -19,22 +19,22 @@ func SendToUser(userID int64, data interface{}, infoType PackageType) error {
 }
 
 func walk(key, value interface{}) bool {
-	logrus.Debug("Key =", key, "Value =", value)
+	logrus.Info("Key =", key, "Value =", value)
 	return true
 }
 
 // SetConn 存储
 func SetConn(userID int64, conn *Conn) {
-	logrus.Debug("Before SetConn")
+	logrus.Info("Before SetConn")
 	ConnsManager.Range(walk)
 	ConnsManager.Store(userID, conn)
-	logrus.Debug("After SetConn")
+	logrus.Info("After SetConn")
 	ConnsManager.Range(walk)
 }
 
 // GetConn 获取
 func GetConn(userID int64) *Conn {
-	logrus.Debug("GetConn")
+	logrus.Info("GetConn")
 	ConnsManager.Range(walk)
 	value, ok := ConnsManager.Load(userID)
 	if ok {
@@ -45,7 +45,7 @@ func GetConn(userID int64) *Conn {
 
 // DeleteConn 删除
 func DeleteConn(userID int64) {
-	logrus.Debug("Before DeleteConn")
+	logrus.Info("Before DeleteConn")
 	ConnsManager.Range(walk)
 	value, ok := ConnsManager.LoadAndDelete(userID)
 	if ok {
@@ -55,7 +55,7 @@ func DeleteConn(userID int64) {
 		}
 		logrus.Info("delete user:", userID, " Conn!")
 	}
-	logrus.Debug("After DeleteConn")
+	logrus.Info("After DeleteConn")
 	ConnsManager.Range(walk)
 	return
 }
