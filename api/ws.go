@@ -21,7 +21,7 @@ import (
 
 const (
 	//设置ws的超时时间
-	wsTimeout = 12 * time.Minute
+	wsTimeout = 5 * time.Minute
 )
 
 type WsConnContext struct {
