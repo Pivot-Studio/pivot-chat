@@ -198,10 +198,6 @@ func (gpo *GroupOperator) SaveGroupMessage(SendInfo *model.GroupMessageInput) er
 		return constant.UserNotMatchGroup
 	}
 
-	// content, err := util.AESencrypt(SendInfo.Data)
-	// if err != nil {
-	// 	return errors.New("消息加密失败" + err.Error())
-	// }
 	//开始持久化
 	meg := &model.Message{
 		SenderId:   SendInfo.UserId,
@@ -211,7 +207,8 @@ func (gpo *GroupOperator) SaveGroupMessage(SendInfo *model.GroupMessageInput) er
 	}
 	//保证MaxSeq是正确的, 需要加锁
 	g.Lock()
-	meg.Seq = g.group.MaxSeq + 1
+	g.group.MaxSeq += 1
+	meg.Seq = g.group.MaxSeq
 
 	err = dao.RS.IncrGroupSeq(g.group.GroupId)
 	if err != nil {
