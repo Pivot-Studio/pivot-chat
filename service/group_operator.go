@@ -94,8 +94,7 @@ func (g *Group_) SendGroupMessage(sendInfo *model.GroupMessageInput, seq int64, 
 	g.RUnlock()
 
 	for _, user := range members {
-		//user0 := user
-		go func(user *model.GroupUser, sendInfo *model.GroupMessageInput) {
+		go func(user model.GroupUser, sendInfo *model.GroupMessageInput) {
 			output := model.GroupMessageOutput{
 				UserId:   user.UserId,
 				GroupId:  g.group.GroupId,
@@ -112,7 +111,7 @@ func (g *Group_) SendGroupMessage(sendInfo *model.GroupMessageInput, seq int64, 
 				logrus.Errorf("[service.SendGroupMessage] group SendToUser %+v", err)
 				return
 			}
-		}(&user, sendInfo)
+		}(user, sendInfo)
 	}
 	logrus.Infof("Send megs to group %d, member num:%d", g.group.GroupId, len(members))
 }
