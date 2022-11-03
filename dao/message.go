@@ -1,8 +1,6 @@
 package dao
 
 import (
-	"fmt"
-
 	"github.com/Pivot-Studio/pivot-chat/model"
 )
 
