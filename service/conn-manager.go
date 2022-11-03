@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -20,22 +19,22 @@ func SendToUser(userID int64, data interface{}, infoType PackageType) error {
 }
 
 func walk(key, value interface{}) bool {
-	fmt.Println("Key =", key, "Value =", value)
-	return false
+	logrus.Debug("Key =", key, "Value =", value)
+	return true
 }
 
 // SetConn 存储
 func SetConn(userID int64, conn *Conn) {
-	fmt.Println("Before SetConn")
+	logrus.Debug("Before SetConn")
 	ConnsManager.Range(walk)
 	ConnsManager.Store(userID, conn)
-	fmt.Println("After SetConn")
+	logrus.Debug("After SetConn")
 	ConnsManager.Range(walk)
 }
 
 // GetConn 获取
 func GetConn(userID int64) *Conn {
-	fmt.Println("GetConn")
+	logrus.Debug("GetConn")
 	ConnsManager.Range(walk)
 	value, ok := ConnsManager.Load(userID)
 	if ok {
@@ -46,7 +45,7 @@ func GetConn(userID int64) *Conn {
 
 // DeleteConn 删除
 func DeleteConn(userID int64) {
-	fmt.Println("Before DeleteConn")
+	logrus.Debug("Before DeleteConn")
 	ConnsManager.Range(walk)
 	value, ok := ConnsManager.LoadAndDelete(userID)
 	if ok {
@@ -56,7 +55,7 @@ func DeleteConn(userID int64) {
 		}
 		logrus.Info("delete user:", userID, " Conn!")
 	}
-	fmt.Println("After DeleteConn")
+	logrus.Debug("After DeleteConn")
 	ConnsManager.Range(walk)
 	return
 }
