@@ -38,7 +38,7 @@ func (c *Conn) Send(data interface{}, t PackageType) error {
 		Type: t,
 		Data: data,
 	}
-	err := c.WS.SetWriteDeadline(time.Now().Add(10 * time.Millisecond))
+	err := c.WS.SetWriteDeadline(time.Now().Add(200 * time.Millisecond))
 	if err != nil {
 		return err
 	}
