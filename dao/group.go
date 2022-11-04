@@ -17,6 +17,10 @@ func (rs *RdbService) IncrGroupUserNum(groupID int64) (err error) {
 	return rs.tx.Table("groups").Where("group_id = ?", groupID).Update("user_num", gorm.Expr("user_num + 1")).Error
 }
 
+func (rs *RdbService) DecrGroupUserNum(groupID int64) (err error) {
+	return rs.tx.Table("groups").Where("group_id = ?", groupID).Update("user_num", gorm.Expr("user_num - 1")).Error
+}
+
 func (rs *RdbService) ExistGroup(groupID int64) bool {
 	return rs.tx.Table("groups").Where("group_id = ?", groupID).
 		Take(&model.Group{}).Error != gorm.ErrRecordNotFound

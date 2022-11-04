@@ -13,3 +13,7 @@ func (rs *RdbService) GetGroupUsers(groupID int64) (*[]model.GroupUser, error) {
 	err := rs.tx.Table("group_users").Where("group_id = ?", groupID).Find(&g).Error
 	return &g, err
 }
+
+func (rs *RdbService) DeleteGroupUser(user *model.GroupUser) error {
+	return rs.tx.Delete(&user).Error
+}

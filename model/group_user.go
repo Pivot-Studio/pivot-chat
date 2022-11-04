@@ -23,6 +23,11 @@ type UserJoinGroupInput struct {
 	GroupId int64 `json:"group_id5"`
 }
 
+type UserQuitGroupInput struct {
+	UserId  int64 `json:"user_id6"`
+	GroupId int64 `json:"group_id6"`
+}
+
 type UserJoinGroupOutput struct {
 	GroupId      int64     `json:"group_id"` // 群组id
 	OwnerId      int64     `json:"owner_id"`

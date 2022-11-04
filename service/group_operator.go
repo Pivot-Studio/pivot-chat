@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"sync"
 	"time"
 
@@ -117,8 +118,54 @@ func (gpo *GroupOperator) UpdateGroup() {
 }
 
 // QuitGroup todo 退出群组
-func (gpo *GroupOperator) QuitGroup() {
+func (gpo *GroupOperator) QuitGroup(input *model.UserQuitGroupInput)error {
+	g, err := gpo.GetGroup(input.GroupId)
+	if err != nil {
+		logrus.Errorf("[service.QuitGroup] QuitGroup %+v", err)
+		return err
+	}
 
+	//group的owner请求退出
+	if g.group.OwnerId == input.UserId {
+		logrus.Errorf("[service.QuitGroup] QuitGroup %+v", err)
+		return errors.New("groupOwnerId = UserId")
+	}
+
+	groupUser := model.GroupUser{
+		GroupId:    input.GroupId,
+		UserId:     input.UserId,
+		MemberType: model.SPEAKER,
+		Status:     0,
+		CreateTime: time.Now(),
+		UpdateTime: time.Now(),
+	}
+
+	g.Lock()
+	defer g.Unlock()
+	//删除
+	err = dao.RS.DeleteGroupUser(&groupUser)
+	if err != nil {
+		logrus.Errorf("[service.QuitGroup] QuitGroup %+v", err)
+		return err
+	}
+
+	err = dao.RS.DecrGroupUserNum(g.group.GroupId)
+	if err != nil {
+		logrus.Errorf("[service.QuitGroup] QuitGroup %+v", err)
+		return err
+	}
+
+
+	for i, v := range *g.Members {
+		if v.GroupId == input.GroupId && v.UserId == input.UserId {
+			s:=*g.Members
+			*g.Members = append(s[:i],s[i+1:]...)
+		}
+	}
+
+	g.group.UserNum-=1
+
+	return nil
 }
 
 // JoinGroup 加入群组
