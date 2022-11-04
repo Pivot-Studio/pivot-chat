@@ -45,6 +45,7 @@ const (
 	PackageType_PT_HEARTBEAT PackageType = 3
 	PackageType_PT_MESSAGE   PackageType = 4
 	PackageType_PT_JOINGROUP PackageType = 5
+	PackageType_PT_QUITGROUP PackageType = 6
 )
 
 type (
@@ -57,6 +58,7 @@ type (
 		model.GroupMessageInput
 		model.GroupMessageSyncInput
 		model.UserJoinGroupInput
+		model.UserQuitGroupInput
 	}
 )
 
@@ -162,6 +164,9 @@ func HandlePackage(bytes []byte, conn *service.Conn) {
 	case PackageType_PT_JOINGROUP:
 		fmt.Println("JOINGROUP")
 		err = UserJoinGroup(input.Data.UserJoinGroupInput, conn.UserId)
+	case PackageType_PT_QUITGROUP:
+		fmt.Println("QUITGROUP")
+		err = UserQuitGroup(input.Data.UserQuitGroupInput, conn.UserId)
 	default:
 		logrus.Info("SWITCH OTHER")
 	}
@@ -188,4 +193,11 @@ func UserJoinGroup(data model.UserJoinGroupInput, userId int64) error {
 	data.UserId = userId
 	fmt.Printf("%+v\n", data)
 	return HandleJoinGroup(&data)
+}
+
+
+func UserQuitGroup(data model.UserQuitGroupInput, userId int64) error {
+	data.UserId = userId
+	fmt.Printf("%+v\n", data)
+	return HandleQuitGroup(&data)
 }

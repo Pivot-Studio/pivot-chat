@@ -22,6 +22,11 @@ func HandleJoinGroup(meg *model.UserJoinGroupInput) error {
 	return err
 }
 
+func HandleQuitGroup(meg *model.UserQuitGroupInput) error {
+	err := service.GroupOp.QuitGroup(meg)
+	return err
+}
+
 func GetMembersByGroupId(ctx *gin.Context) {
 
 	p := &getMembersByGroupIdParam{}
