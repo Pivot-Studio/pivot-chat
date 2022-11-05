@@ -216,7 +216,7 @@ func init() {
 func Email(ctx *gin.Context, email string) (code string, err error) {
 	rand.Seed(time.Now().Unix())
 	code1 := rand.Intn(899999) + 100000
-	code = fmt.Sprintf("%6v", code1)
+	code = fmt.Sprintf("%06v", code1)
 	return code, CaptchaLogic(ctx, code, email)
 }
 
