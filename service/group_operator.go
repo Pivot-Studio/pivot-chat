@@ -7,8 +7,11 @@ import (
 	"github.com/Pivot-Studio/pivot-chat/constant"
 	"github.com/Pivot-Studio/pivot-chat/dao"
 	"github.com/Pivot-Studio/pivot-chat/model"
+	"github.com/Pivot-Studio/pivot-chat/proto/github.com/Pivot-Studio/pivot-chat/pb"
 	"github.com/gin-gonic/gin"
+	"github.com/golang/protobuf/proto"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var GroupOp GroupOperator
@@ -70,7 +73,7 @@ func (gpo *GroupOperator) GetGroup(groupID int64) (*Group_, error) {
 	//更新群组成员
 	g.Lock()
 
-	if g.group.UserNum != int32(len(*g.Members)) {
+	if g.group.UserNum != int64(len(*g.Members)) {
 		var err error
 		g.Members, err = dao.RS.GetGroupUsers(g.group.GroupId)
 		if err != nil {
@@ -95,7 +98,7 @@ func (g *Group_) SendGroupMessage(sendInfo *model.GroupMessageInput, seq int64, 
 
 	for _, user := range members {
 		go func(user model.GroupUser, sendInfo *model.GroupMessageInput) {
-			output := model.GroupMessageOutput{
+			resp := &pb.GroupMessageResponse{
 				UserId:   user.UserId,
 				GroupId:  g.group.GroupId,
 				Data:     sendInfo.Data,
@@ -103,10 +106,14 @@ func (g *Group_) SendGroupMessage(sendInfo *model.GroupMessageInput, seq int64, 
 				Seq:      seq,
 				ReplyTo:  sendInfo.ReplyTo,
 				Type:     sendInfo.Type,
-				Time:     curtime,
+				Time:     timestamppb.Now(),
 			}
-
-			err := SendToUser(user.UserId, output, PackageType_PT_MESSAGE)
+			output, err := proto.Marshal(resp)
+			if err != nil {
+				logrus.Errorf("[service.SendGroupMessage] proto.Marshal %+v", err)
+				return
+			}
+			err = SendToUser(user.UserId, output, PackageType_PT_MESSAGE)
 			if err != nil {
 				logrus.Errorf("[service.SendGroupMessage] group SendToUser %+v", err)
 				return
@@ -162,13 +169,18 @@ func (gpo *GroupOperator) JoinGroup(input *model.UserJoinGroupInput) error {
 	g.Unlock()
 
 	// 给加入的用户回复消息
-	output := model.UserJoinGroupOutput{
+	resp := pb.UserJoinGroupResponse{
 		GroupId:      g.group.GroupId,
 		OwnerId:      g.group.OwnerId,
 		Name:         g.group.Name,
 		Introduction: g.group.Introduction,
 		UserNum:      g.group.UserNum,
-		CreateTime:   g.group.CreateTime,
+		CreateTime:   &g.group.CreateTime,
+	}
+	output, err := proto.Marshal(&resp)
+	if err != nil {
+		logrus.Errorf("[Service] UserJoinGroup %+v", err)
+		return err
 	}
 	err = SendToUser(input.UserId, output, PackageType_PT_JOINGROUP)
 	if err != nil {
@@ -272,7 +284,7 @@ type CreateGroupResp struct {
 	OwnerId      int64     `json:"owner_id"`
 	Name         string    `json:"name"`
 	Introduction string    `json:"introduction"`
-	UserNum      int32     `json:"user_num"`
+	UserNum      int64     `json:"user_num"`
 	CreateTime   time.Time `json:"create_time"`
 	MaxSeq       int64     `json:"max_seq"`
 }
@@ -287,8 +299,8 @@ func CreateGroup(ctx *gin.Context, Name string, Introduction string) (*CreateGro
 		Name:         Name,
 		Introduction: Introduction,
 		UserNum:      1,
-		CreateTime:   time.Now(),
-		UpdateTime:   time.Now(),
+		CreateTime:   *timestamppb.Now(),
+		UpdateTime:   *timestamppb.Now(),
 		MaxSeq:       0,
 	}
 
@@ -313,7 +325,7 @@ func CreateGroup(ctx *gin.Context, Name string, Introduction string) (*CreateGro
 		Name:         g.Name,
 		Introduction: g.Introduction,
 		UserNum:      g.UserNum,
-		CreateTime:   g.CreateTime,
+		CreateTime:   g.CreateTime.AsTime(),
 		MaxSeq:       g.MaxSeq,
 	}
 	return resp, nil

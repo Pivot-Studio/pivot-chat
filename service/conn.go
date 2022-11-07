@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"sync"
 	"time"
 
@@ -31,20 +30,12 @@ const (
 	PackageType_PT_JOINGROUP PackageType = 5
 )
 
-func (c *Conn) Send(data interface{}, t PackageType) error {
+func (c *Conn) Send(data []byte, t PackageType) error {
 	c.WSMutex.Lock()
 	defer c.WSMutex.Unlock()
-	ret := Package{
-		Type: t,
-		Data: data,
-	}
 	err := c.WS.SetWriteDeadline(time.Now().Add(200 * time.Millisecond))
 	if err != nil {
 		return err
 	}
-	bytes, err := json.Marshal(ret)
-	if err != nil {
-		return err
-	}
-	return c.WS.WriteMessage(websocket.TextMessage, bytes)
+	return c.WS.WriteMessage(websocket.TextMessage, data)
 }

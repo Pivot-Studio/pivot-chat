@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"github.com/Pivot-Studio/pivot-chat/dao"
+	"github.com/Pivot-Studio/pivot-chat/proto/github.com/Pivot-Studio/pivot-chat/pb"
 	"github.com/Pivot-Studio/pivot-chat/service"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/sirupsen/logrus"
@@ -108,14 +110,14 @@ func wsHandler(ctx *gin.Context) {
 	// 判断一个用户是否还有别的设备，如果有则下线
 	preConn := service.GetConn(user.UserId)
 	if preConn != nil {
-		preConn.Send("有别的设备登录了你的用户，你寄了", service.PackageType_PT_ERR)
+		preConn.Send([]byte("有别的设备登录了你的用户，你寄了"), service.PackageType_PT_ERR)
 		service.DeleteConn(user.UserId)
 		logrus.Info("[wsHandler] Get another conn in same userid-", user.UserId, ", delete pre conn")
 	}
 	service.SetConn(user.UserId, &conn)
 	defer service.DeleteConn(user.UserId) // 出现差错就从map里删除
 
-	err = conn.Send("ws success!waiting for package...", service.PackageType(PackageType_PT_SIGN_IN))
+	err = conn.Send([]byte("ws success!waiting for package..."), service.PackageType(PackageType_PT_SIGN_IN))
 	if err != nil {
 		logrus.Errorf("[wsHandler] Send login ack failed, %+v", err)
 		return
@@ -135,18 +137,25 @@ func wsHandler(ctx *gin.Context) {
 
 // HandlePackage 分类型处理数据包
 func HandlePackage(bytes []byte, conn *service.Conn) {
-	input := Package{}
-	err := json.Unmarshal(bytes, &input)
-	if err != nil {
-		logrus.Errorf("[HandlePackage] json unmarshal %+v", err)
-		//TODO: release连接
-		conn.Send(err.Error(), service.PackageType(PackageType_PT_ERR))
-		return
-	}
-	fmt.Printf("%+v\n", input)
+	// err := json.Unmarshal(bytes, &input)
+	// if err != nil {
+	// 	logrus.Errorf("[HandlePackage] json unmarshal %+v", err)
+	// 	//TODO: release连接
+	// 	conn.Send([]byte(err.Error()), service.PackageType(PackageType_PT_ERR))
+	// 	return
+	// }
+	// fmt.Printf("%+v\n", input)
 	//分类型处理
 	//TODO
-	switch input.Type {
+	pkg := &pb.PackageRequest{}
+	err := proto.Unmarshal(bytes, pkg)
+	if err != nil {
+		logrus.Errorf("[HandlePackage] proto unmarshal %+v", err)
+		//TODO: release连接
+		conn.Send([]byte(err.Error()), service.PackageType(PackageType_PT_ERR))
+		return
+	}
+	switch .Type {
 	case PackageType_PT_UNKNOWN:
 		fmt.Println("UNKNOWN")
 	case PackageType_PT_SIGN_IN:
