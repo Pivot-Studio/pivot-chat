@@ -1,11 +1,11 @@
 package service
 
 import (
-	"github.com/Pivot-Studio/pivot-chat/constant"
-	"github.com/Pivot-Studio/pivot-chat/dao"
-	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"pivot-chat/constant"
+	"pivot-chat/dao"
+	"pivot-chat/model"
 )
 
 func Sync(ctx *gin.Context, input *model.GroupMessageSyncInput) (*model.GroupMessageSyncOutput, error) { // 进入这里时，group内容是跟数据库一致的，members也是使用的正确缓存

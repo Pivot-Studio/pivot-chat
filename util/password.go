@@ -1,8 +1,8 @@
 package util
 
 import (
-	"github.com/Pivot-Studio/pivot-chat/constant"
 	"golang.org/x/crypto/bcrypt"
+	"pivot-chat/constant"
 )
 
 func EncodePassword(password string) (passwordHash string, err error) {

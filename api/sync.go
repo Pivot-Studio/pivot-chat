@@ -2,11 +2,11 @@ package api
 
 import (
 	"fmt"
-	"github.com/Pivot-Studio/pivot-chat/model"
-	"github.com/Pivot-Studio/pivot-chat/service"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"pivot-chat/model"
+	"pivot-chat/service"
 )
 
 type SyncParam struct {
@@ -42,5 +42,4 @@ func Sync(ctx *gin.Context) {
 		"msg":  fmt.Sprintf("同步%d条消息成功", len(ret.Data)),
 		"data": ret,
 	})
-	return
 }

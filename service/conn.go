@@ -1,11 +1,12 @@
 package service
 
 import (
-	"encoding/json"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"google.golang.org/protobuf/proto"
+	"pivot-chat/pkg/pb"
 )
 
 type Conn struct {
@@ -14,37 +15,29 @@ type Conn struct {
 	UserId  int64           // 用户ID
 }
 
-type PackageType int
-type Package struct {
-	//数据包内容, 按需修改
-	Type PackageType
-	Data interface{}
-}
+func (c *Conn) Send(message proto.Message, pkType pb.PackageType) error {
+	output := pb.Output{
+		Type: pkType,
+	}
 
-const (
-	PackageType_PT_ERR       PackageType = 0
-	PackageType_PT_UNKNOWN   PackageType = 0
-	PackageType_PT_SIGN_IN   PackageType = 1
-	PackageType_PT_SYNC      PackageType = 2
-	PackageType_PT_HEARTBEAT PackageType = 3
-	PackageType_PT_MESSAGE   PackageType = 4
-	PackageType_PT_JOINGROUP PackageType = 5
-)
+	if message != nil {
+		msgBytes, err := proto.Marshal(message)
+		if err != nil {
+			return err
+		}
+		output.Data = msgBytes
+	}
 
-func (c *Conn) Send(data interface{}, t PackageType) error {
+	outputBytes, err := proto.Marshal(&output)
+	if err != nil {
+		return err
+	}
+
 	c.WSMutex.Lock()
 	defer c.WSMutex.Unlock()
-	ret := Package{
-		Type: t,
-		Data: data,
-	}
-	err := c.WS.SetWriteDeadline(time.Now().Add(200 * time.Millisecond))
+	err = c.WS.SetWriteDeadline(time.Now().Add(200 * time.Millisecond))
 	if err != nil {
 		return err
 	}
-	bytes, err := json.Marshal(ret)
-	if err != nil {
-		return err
-	}
-	return c.WS.WriteMessage(websocket.TextMessage, bytes)
+	return c.WS.WriteMessage(websocket.TextMessage, outputBytes)
 }

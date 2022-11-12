@@ -7,12 +7,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Pivot-Studio/pivot-chat/conf"
-	"github.com/Pivot-Studio/pivot-chat/constant"
-	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/sirupsen/logrus"
+	"pivot-chat/conf"
+	"pivot-chat/constant"
+	"pivot-chat/model"
 )
 
 const (

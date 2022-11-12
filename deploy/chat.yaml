@@ -63,6 +63,13 @@ metadata:
     nginx.ingress.kubernetes.io/limit-connections: "60"
     nginx.ingress.kubernetes.io/limit-rps: "60"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # 跨域
+    nginx.ingress.kubernetes.io/cors-allow-headers: >-
+      DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization
+    nginx.ingress.kubernetes.io/cors-allow-methods: 'PUT, GET, POST, OPTIONS'
+    nginx.ingress.kubernetes.io/cors-allow-origin: '*'
+    nginx.ingress.kubernetes.io/enable-cors: 'true'
+    # ws需要
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/configuration-snippet: |

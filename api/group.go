@@ -1,23 +1,24 @@
 package api
 
 import (
-	"github.com/Pivot-Studio/pivot-chat/model"
-	"github.com/Pivot-Studio/pivot-chat/service"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"net/http"
+	"pivot-chat/pkg/pb"
+	"pivot-chat/service"
 )
 
 type getMembersByGroupIdParam struct {
 	GroupId int64 `form:"groupid" binding:"required"`
 }
 
-func HandleGroupMessage(meg *model.GroupMessageInput) error {
+func HandleGroupMessage(meg *pb.GroupMessageRequest) error {
 	err := service.GroupOp.SaveGroupMessage(meg)
 	return err
 }
 
-func HandleJoinGroup(meg *model.UserJoinGroupInput) error {
+func HandleJoinGroup(meg *pb.UserJoinGroupRequest) error {
 	err := service.GroupOp.JoinGroup(meg)
 	return err
 }

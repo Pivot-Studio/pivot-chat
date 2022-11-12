@@ -2,9 +2,9 @@ package dao
 
 import (
 	"errors"
-	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
+	"pivot-chat/model"
 )
 
 func (rs *RdbService) CreateUser(user []*model.User) error {

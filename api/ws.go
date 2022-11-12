@@ -2,17 +2,17 @@ package api
 
 //import "C"
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
-	"github.com/Pivot-Studio/pivot-chat/dao"
-	"github.com/Pivot-Studio/pivot-chat/service"
+	"google.golang.org/protobuf/proto"
+	"pivot-chat/dao"
+	"pivot-chat/pkg/pb"
+	"pivot-chat/service"
 
-	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/sirupsen/logrus"
 
 	"github.com/gin-gonic/gin"
@@ -30,35 +30,6 @@ type WsConnContext struct {
 	DeviceId int64
 	AppId    int64
 }
-type LoginInfo struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	//DeviceId int64  `json:"device_id"`
-	//AppId    int64  `json:"appid"`
-}
-
-const (
-	PackageType_PT_ERR       PackageType = 0
-	PackageType_PT_UNKNOWN   PackageType = 0
-	PackageType_PT_SIGN_IN   PackageType = 1
-	PackageType_PT_SYNC      PackageType = 2
-	PackageType_PT_HEARTBEAT PackageType = 3
-	PackageType_PT_MESSAGE   PackageType = 4
-	PackageType_PT_JOINGROUP PackageType = 5
-)
-
-type (
-	PackageType int
-	Package     struct {
-		Type PackageType `json:"type"`
-		Data Input       `json:"data"`
-	}
-	Input struct {
-		model.GroupMessageInput
-		model.GroupMessageSyncInput
-		model.UserJoinGroupInput
-	}
-)
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -93,13 +64,13 @@ func wsHandler(ctx *gin.Context) {
 	}
 	conn.WS, err = upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
-		logrus.Errorf("[wsHandler] ws upgrade fail, %+v", err)
+		logrus.Errorf("[ws-Handler] ws upgrade fail, %+v", err)
 		return
 	}
 	// 通过email获取userid
 	err = dao.RS.GetUserByEmail(user, user.Email)
 	if err != nil {
-		logrus.Errorf("[wsHandler] GetUserByEmail fail, %+v", err)
+		logrus.Errorf("[ws-Handler] GetUserByEmail fail, %+v", err)
 		return
 	}
 	// conn加入map
@@ -108,25 +79,35 @@ func wsHandler(ctx *gin.Context) {
 	// 判断一个用户是否还有别的设备，如果有则下线
 	preConn := service.GetConn(user.UserId)
 	if preConn != nil {
-		preConn.Send("有别的设备登录了你的用户，你寄了", service.PackageType_PT_ERR)
+		preConn.Send(&pb.ErrorMessage{
+			Code:    1,
+			Message: "有别的用户登录，你寄楽!",
+		}, pb.PackageType_ERR)
 		service.DeleteConn(user.UserId)
-		logrus.Info("[wsHandler] Get another conn in same userid-", user.UserId, ", delete pre conn")
+		logrus.Info("[ws-Handler] Get another conn in same userid-", user.UserId, ", delete pre conn")
 	}
 	service.SetConn(user.UserId, &conn)
 	defer service.DeleteConn(user.UserId) // 出现差错就从map里删除
 
-	err = conn.Send("ws success!waiting for package...", service.PackageType(PackageType_PT_SIGN_IN))
+	err = conn.Send(&pb.ErrorMessage{
+		Code:    0,
+		Message: "---signin success! waiting for package...---",
+	}, pb.PackageType_SIGHIN)
 	if err != nil {
-		logrus.Errorf("[wsHandler] Send login ack failed, %+v", err)
+		logrus.Errorf("[ws-Handler] Send login ack failed, %+v", err)
 		return
 	}
 
 	//处理连接
 	for {
 		err = conn.WS.SetReadDeadline(time.Now().Add(wsTimeout))
+		if err != nil {
+			logrus.Errorf("[ws-Handler] SetReadDeadline failed, %+v", err)
+			return
+		}
 		_, data, err := conn.WS.ReadMessage()
 		if err != nil {
-			logrus.Errorf("[wsHandler] ReadMessage failed, %+v", err)
+			logrus.Errorf("[ws-Handler] ReadMessage failed, %+v", err)
 			return
 		}
 		HandlePackage(data, &conn)
@@ -135,57 +116,60 @@ func wsHandler(ctx *gin.Context) {
 
 // HandlePackage 分类型处理数据包
 func HandlePackage(bytes []byte, conn *service.Conn) {
-	input := Package{}
-	err := json.Unmarshal(bytes, &input)
-	if err != nil {
-		logrus.Errorf("[HandlePackage] json unmarshal %+v", err)
-		//TODO: release连接
-		conn.Send(err.Error(), service.PackageType(PackageType_PT_ERR))
-		return
-	}
-	fmt.Printf("%+v\n", input)
 	//分类型处理
 	//TODO
-	switch input.Type {
-	case PackageType_PT_UNKNOWN:
+	pkg := &pb.Input{}
+	err := proto.Unmarshal(bytes, pkg)
+	if err != nil {
+		logrus.Errorf("[HandlePackage] proto unmarshal %+v", err)
+		//TODO: release连接
+		conn.Send(&pb.ErrorMessage{
+			Code:    1,
+			Message: err.Error(),
+		}, pb.PackageType_ERR)
+		return
+	}
+	switch pkg.Type {
+	case pb.PackageType_ERR:
 		fmt.Println("UNKNOWN")
-	case PackageType_PT_SIGN_IN:
+	case pb.PackageType_SIGHIN:
 		fmt.Println("SIGN_IN")
-	// case PackageType_PT_SYNC:
-	// 	fmt.Println("SYNC")
-	// 	err = Sync(input.Data.GroupMessageSyncInput, conn.UserId)
-	case PackageType_PT_HEARTBEAT:
-		fmt.Println("HEARTBEAT")
-	case PackageType_PT_MESSAGE:
+	case pb.PackageType_MESSGAE:
 		fmt.Println("MESSAGE")
-		err = Message(input.Data.GroupMessageInput, conn.UserId)
-	case PackageType_PT_JOINGROUP:
+		err = Message(pkg.GetData(), conn.UserId)
+	case pb.PackageType_JOINGROUP:
 		fmt.Println("JOINGROUP")
-		err = UserJoinGroup(input.Data.UserJoinGroupInput, conn.UserId)
+		err = UserJoinGroup(pkg.GetData(), conn.UserId)
 	default:
 		logrus.Info("SWITCH OTHER")
 	}
 	if err != nil {
-		fmt.Println(err)
-		conn.Send(err.Error(), service.PackageType(PackageType_PT_ERR))
+		conn.Send(&pb.ErrorMessage{
+			Code:    1,
+			Message: err.Error(),
+		}, pb.PackageType_ERR)
 		return
 	}
 }
 
-func Message(data model.GroupMessageInput, userId int64) error {
-	data.UserId = userId
-	fmt.Printf("%+v\n", data)
-	return HandleGroupMessage(&data)
+func Message(data []byte, userId int64) error {
+	req := pb.GroupMessageRequest{}
+	err := proto.Unmarshal(data, &req)
+	if err != nil {
+		logrus.Errorf("[ws-Message] proto unmarshal falied:%+v", err)
+		return err
+	}
+	req.UserId = userId
+	return HandleGroupMessage(&req)
 }
 
-// func Sync(data model.GroupMessageSyncInput, userId int64) error {
-// 	data.UserId = userId
-// 	fmt.Printf("%+v\n", data)
-// 	return HandleSync(&data)
-// }
-
-func UserJoinGroup(data model.UserJoinGroupInput, userId int64) error {
-	data.UserId = userId
-	fmt.Printf("%+v\n", data)
-	return HandleJoinGroup(&data)
+func UserJoinGroup(data []byte, userId int64) error {
+	req := pb.UserJoinGroupRequest{}
+	err := proto.Unmarshal(data, &req)
+	if err != nil {
+		logrus.Errorf("[ws-UserJoinGroup] proto unmarshal falied:%+v", err)
+		return err
+	}
+	req.UserId = userId
+	return HandleJoinGroup(&req)
 }
