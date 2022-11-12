@@ -3,12 +3,14 @@ package tutorial;
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/Pivot-Studio/pivot-chat/pb";
+// protoc --go_out=plugins=grpc:. chat.proto
 
 message GroupMessageRequest {
      int64 user_id = 1;
      int64 group_id = 2;
-     int64 sync_seq = 3;
-     int64 limit = 4;
+     string data = 3;
+     int64 reply_to = 4;
+     int64 type = 5;
 }
 
 message GroupMessageResponse {
@@ -36,29 +38,24 @@ message UserJoinGroupResponse {
     google.protobuf.Timestamp create_time = 6;
 }
 
-enum PhoneType {
-	PackageType_PT_ERR = 0;
-	PackageType_PT_SIGN_IN = 1;
-	PackageType_PT_SYNC  = 2;
-	PackageType_PT_HEARTBEAT  = 3;
-	PackageType_PT_MESSAGE    = 4;
-	PackageType_PT_JOINGROUP  = 5;
+message ErrorMessage {
+    int64 code = 1; // 为0表示ack，为1表示error
+    string message = 2;
 }
 
-message PackageRequest {
-    int64 type = 1;
-    oneof payload {
-        UserJoinGroupRequest user_join_group_request = 2;
-        GroupMessageRequest group_message_request = 3;
-    }
+enum PackageType {
+	ERR = 0;
+	SIGHIN = 1;
+	MESSGAE    = 2;
+	JOINGROUP  = 3;
 }
 
-message PackageResponse {
-    int64 type = 1;
-    oneof payload {
-        UserJoinGroupResponse user_join_group_response = 2;
-        GroupMessageResponse group_message_response = 3;
-    }
+message Input {
+    PackageType type = 1;
+    bytes data = 2;
 }
 
-service 
+message Output {
+    PackageType type = 1;
+    bytes data = 2;
+}

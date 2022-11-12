@@ -1,21 +1,22 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 
+	"github.com/Pivot-Studio/pivot-chat/proto/github.com/Pivot-Studio/pivot-chat/pb"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
 )
 
 var ConnsManager = sync.Map{} // (userID, conn)
 
-func SendToUser(userID int64, data []byte, infoType PackageType) error {
+func SendToUser(userID int64, meg proto.Message, infoType pb.PackageType) error {
 	conn := GetConn(userID)
 	if conn == nil {
-		return errors.New(fmt.Sprintf("[Service] | conn-manager get user:%d connection err", userID))
+		return fmt.Errorf("[Service] | conn-manager get user:%d connection err", userID)
 	}
-	err := conn.Send(data, infoType)
+	err := conn.Send(meg, infoType)
 	return err
 }
 
@@ -58,5 +59,4 @@ func DeleteConn(userID int64) {
 	}
 	logrus.Info("After DeleteConn")
 	ConnsManager.Range(walk)
-	return
 }

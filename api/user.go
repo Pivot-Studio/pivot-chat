@@ -193,7 +193,6 @@ func Login(ctx *gin.Context) {
 			"email":     user.Email,
 		},
 	})
-	return
 
 }
 
