@@ -2,8 +2,8 @@ syntax = "proto3";
 package tutorial;
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/Pivot-Studio/pivot-chat/pb";
-// protoc --go_out=plugins=grpc:. chat.proto
+option go_package = "pivot-chat/pkg/pb/";
+// protoc --go_out=plugins=grpc:../../ chat.proto
 
 message GroupMessageRequest {
      int64 user_id = 1;
