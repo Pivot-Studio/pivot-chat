@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/Pivot-Studio/pivot-chat/proto/github.com/Pivot-Studio/pivot-chat/pb"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
+	"pivot-chat/pkg/pb"
 )
 
 var ConnsManager = sync.Map{} // (userID, conn)

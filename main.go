@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/Pivot-Studio/pivot-chat/api"
 	"github.com/sirupsen/logrus"
+	"pivot-chat/api"
 )
 
 func main() {

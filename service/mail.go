@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Pivot-Studio/pivot-chat/conf"
-	"github.com/Pivot-Studio/pivot-chat/dao"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/gomail.v2"
+	"pivot-chat/conf"
+	"pivot-chat/dao"
 )
 
 var (

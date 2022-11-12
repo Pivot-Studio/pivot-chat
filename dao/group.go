@@ -1,8 +1,8 @@
 package dao
 
 import (
-	"github.com/Pivot-Studio/pivot-chat/model"
 	"gorm.io/gorm"
+	"pivot-chat/model"
 )
 
 func (rs *RdbService) CreateGroup(groups *model.Group) error {

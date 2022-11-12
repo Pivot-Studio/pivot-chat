@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Pivot-Studio/pivot-chat/dao"
-	"github.com/Pivot-Studio/pivot-chat/proto/github.com/Pivot-Studio/pivot-chat/pb"
-	"github.com/Pivot-Studio/pivot-chat/service"
 	"google.golang.org/protobuf/proto"
+	"pivot-chat/dao"
+	"pivot-chat/pkg/pb"
+	"pivot-chat/service"
 
 	"github.com/sirupsen/logrus"
 

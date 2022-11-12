@@ -1,4 +1,4 @@
-module github.com/Pivot-Studio/pivot-chat
+module pivot-chat
 
 go 1.17
 

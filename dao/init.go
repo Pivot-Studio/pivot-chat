@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Pivot-Studio/pivot-chat/conf"
-	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"pivot-chat/conf"
+	"pivot-chat/model"
 )
 
 var (

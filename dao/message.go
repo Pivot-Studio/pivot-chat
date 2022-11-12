@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"github.com/Pivot-Studio/pivot-chat/model"
+	"pivot-chat/model"
 )
 
 func (rs *RdbService) CreateMessage(meg []*model.Message) error {

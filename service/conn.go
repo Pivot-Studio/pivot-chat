@@ -4,9 +4,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Pivot-Studio/pivot-chat/proto/github.com/Pivot-Studio/pivot-chat/pb"
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/proto"
+	"pivot-chat/pkg/pb"
 )
 
 type Conn struct {

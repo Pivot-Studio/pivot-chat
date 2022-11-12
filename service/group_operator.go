@@ -4,13 +4,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Pivot-Studio/pivot-chat/constant"
-	"github.com/Pivot-Studio/pivot-chat/dao"
-	"github.com/Pivot-Studio/pivot-chat/model"
-	"github.com/Pivot-Studio/pivot-chat/proto/github.com/Pivot-Studio/pivot-chat/pb"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"pivot-chat/constant"
+	"pivot-chat/dao"
+	"pivot-chat/model"
+	"pivot-chat/pkg/pb"
 )
 
 var GroupOp GroupOperator

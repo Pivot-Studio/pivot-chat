@@ -3,9 +3,9 @@ package util
 import (
 	"time"
 
-	"github.com/Pivot-Studio/pivot-chat/conf"
-	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/golang-jwt/jwt/v4"
+	"pivot-chat/conf"
+	"pivot-chat/model"
 )
 
 func GenerateToken(u *model.User) (token string, err error) {

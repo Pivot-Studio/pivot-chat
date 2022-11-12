@@ -7,10 +7,10 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/Pivot-Studio/pivot-chat/model"
-	"github.com/Pivot-Studio/pivot-chat/service"
-	"github.com/Pivot-Studio/pivot-chat/util"
 	"github.com/gin-gonic/gin"
+	"pivot-chat/model"
+	"pivot-chat/service"
+	"pivot-chat/util"
 )
 
 type registerParam struct {

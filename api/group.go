@@ -3,10 +3,10 @@ package api
 import (
 	"net/http"
 
-	"github.com/Pivot-Studio/pivot-chat/proto/github.com/Pivot-Studio/pivot-chat/pb"
-	"github.com/Pivot-Studio/pivot-chat/service"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"pivot-chat/pkg/pb"
+	"pivot-chat/service"
 )
 
 type getMembersByGroupIdParam struct {
