@@ -13,7 +13,6 @@ import (
 	"github.com/Pivot-Studio/pivot-chat/service"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/Pivot-Studio/pivot-chat/model"
 	"github.com/sirupsen/logrus"
 
 	"github.com/gin-gonic/gin"
@@ -31,25 +30,6 @@ type WsConnContext struct {
 	DeviceId int64
 	AppId    int64
 }
-type LoginInfo struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	//DeviceId int64  `json:"device_id"`
-	//AppId    int64  `json:"appid"`
-}
-
-type (
-	PackageType int
-	Package     struct {
-		Type PackageType `json:"type"`
-		Data Input       `json:"data"`
-	}
-	Input struct {
-		model.GroupMessageInput
-		model.GroupMessageSyncInput
-		model.UserJoinGroupInput
-	}
-)
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -136,14 +116,6 @@ func wsHandler(ctx *gin.Context) {
 
 // HandlePackage 分类型处理数据包
 func HandlePackage(bytes []byte, conn *service.Conn) {
-	// err := json.Unmarshal(bytes, &input)
-	// if err != nil {
-	// 	logrus.Errorf("[HandlePackage] json unmarshal %+v", err)
-	// 	//TODO: release连接
-	// 	conn.Send([]byte(err.Error()), service.PackageType(PackageType_PT_ERR))
-	// 	return
-	// }
-	// fmt.Printf("%+v\n", input)
 	//分类型处理
 	//TODO
 	pkg := &pb.Input{}
@@ -190,12 +162,6 @@ func Message(data []byte, userId int64) error {
 	req.UserId = userId
 	return HandleGroupMessage(&req)
 }
-
-// func Sync(data model.GroupMessageSyncInput, userId int64) error {
-// 	data.UserId = userId
-// 	fmt.Printf("%+v\n", data)
-// 	return HandleSync(&data)
-// }
 
 func UserJoinGroup(data []byte, userId int64) error {
 	req := pb.UserJoinGroupRequest{}
