@@ -1,11 +1,15 @@
 package api
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"pivot-chat/cors"
+)
 
 var Engine *gin.Engine
 
 func useRouter(r *gin.Engine) {
-	api := r.Group("/api")
+	cors_hander := cors.Cors()
+	api := r.Group("/api", cors_hander)
 	{
 		user := api.Group("/user")
 		{
