@@ -1,11 +1,15 @@
 package api
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/Pivot-Studio/pivot-chat/cors"
+	"github.com/gin-gonic/gin"
+)
 
 var Engine *gin.Engine
 
 func useRouter(r *gin.Engine) {
-	api := r.Group("/api")
+	cors_hander := cors.Cors()
+	api := r.Group("/api", cors_hander)
 	{
 		user := api.Group("/user")
 		{
@@ -15,6 +19,7 @@ func useRouter(r *gin.Engine) {
 			user.POST("/login", Login)
 			user.GET("/findUserById", FindUserById)
 			user.GET("/mygroups", GetMyGroups)
+			user.GET("/myjoinedgroups", GetMyJoinedGroups)
 		}
 		group := api.Group("/group")
 		{

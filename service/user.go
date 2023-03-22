@@ -22,6 +22,7 @@ type GetMyGroupResp struct {
 	Name         string    `json:"name"`
 	Introduction string    `json:"introduction"`
 	UserNum      int32     `json:"user_num"`
+	MaxSeq       int64     `json:"max_seq"`
 	CreateTime   time.Time `json:"create_time"`
 }
 
@@ -91,7 +92,7 @@ func FindUserById(ctx *gin.Context, userid int64) (data map[string]interface{}, 
 	user.UserId = userid
 	err = dao.RS.GetUserbyId(user)
 	if err != nil {
-		logrus.Fatalf("[Service.FindUserById] FindUserById %+v", err)
+		logrus.Errorf("[Service.FindUserById] FindUserById %+v", err)
 		return nil, err
 	}
 	data["user_name"] = user.UserName
@@ -119,6 +120,30 @@ func GetMyGroups(UserId int64) (*[]GetMyGroupResp, error) {
 			Name:         r.Name,
 			Introduction: r.Introduction,
 			UserNum:      r.UserNum,
+			MaxSeq:       r.MaxSeq,
+			CreateTime:   r.CreateTime,
+		})
+	}
+
+	return &groups, nil
+}
+
+func GetMyJoinedGroups(UserId int64) (*[]GetMyGroupResp, error) {
+	RawGroups, err := dao.RS.GetMyJoinedGroups(UserId)
+	if err != nil {
+		logrus.Errorf("[service.GetMyJoinedGroups] %+v", err)
+		return nil, err
+	}
+
+	groups := make([]GetMyGroupResp, 0)
+	for _, r := range RawGroups {
+		groups = append(groups, GetMyGroupResp{
+			GroupId:      r.GroupId,
+			OwnerId:      r.OwnerId,
+			Name:         r.Name,
+			Introduction: r.Introduction,
+			UserNum:      r.UserNum,
+			MaxSeq:       r.MaxSeq,
 			CreateTime:   r.CreateTime,
 		})
 	}

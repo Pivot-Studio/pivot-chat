@@ -19,15 +19,17 @@ func Sync(ctx *gin.Context, input *model.GroupMessageSyncInput) (*model.GroupMes
 		return nil, err
 	}
 	if !g.IsMember(input.UserId) {
-		logrus.Fatalf("[Service] | sync error: user isn't in group | input:", input)
+		logrus.Errorf("[Service] | sync error: user isn't in group | input:%+v", input)
 		return nil, constant.UserNotMatchGroup
 	}
-	megs, err := dao.RS.SyncMessage(input.GroupId, input.SyncSeq, int(input.Limit), input.IsNew)
+	megs, err := dao.RS.SyncMessage(input.GroupId, input.SyncSeq, int(input.Limit))
 	if err != nil {
 		return nil, err
 	}
 	groupMessageOutput := make([]model.GroupMessageOutput, 0)
+	// fmt.Println("-----Sync DEBUG-----")
 	for _, meg := range megs {
+		// fmt.Println(meg.Content)
 		groupMessageOutput = append(groupMessageOutput, model.GroupMessageOutput{
 			UserId:   input.UserId,
 			GroupId:  meg.ReceiverId,
@@ -38,6 +40,15 @@ func Sync(ctx *gin.Context, input *model.GroupMessageSyncInput) (*model.GroupMes
 			Type:     meg.Type,
 			Time:     meg.SendTime,
 		})
+	}
+	if len(megs) <= 0 {
+		output := model.GroupMessageSyncOutput{
+			UserId:  input.UserId,
+			GroupId: input.GroupId,
+			Data:    groupMessageOutput,
+			MaxSeq:  0,
+		}
+		return &output, nil
 	}
 	output := model.GroupMessageSyncOutput{
 		UserId:  input.UserId,

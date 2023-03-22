@@ -175,6 +175,7 @@ func Login(ctx *gin.Context) {
 		})
 		return
 	}
+
 	user, token, err := service.Login(p.Email, p.Password)
 	if err != nil {
 		logrus.Errorf("[Login] %+v", err)
@@ -199,10 +200,42 @@ func Login(ctx *gin.Context) {
 func GetMyGroups(ctx *gin.Context) {
 	user, err := service.GetUserFromAuth(ctx)
 	if err != nil {
-		logrus.Fatalf("[api.GetMyGroups] GetUserFromAuth %+v", err)
+		logrus.Errorf("[api.GetMyGroups] GetUserFromAuth %+v", err)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "查询失败，" + err.Error(),
+		})
+		return
 	}
 
 	g, err := service.GetMyGroups(user.UserId)
+
+	if err != nil {
+		logrus.Errorf("[api.GetMyGroups] %+v", err)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg":  "查询失败",
+			"data": *g,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"msg":  "查询成功",
+		"data": *g,
+	})
+
+}
+
+func GetMyJoinedGroups(ctx *gin.Context) {
+	user, err := service.GetUserFromAuth(ctx)
+	if err != nil {
+		logrus.Errorf("[api.GetMyGroups] GetUserFromAuth %+v", err)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"msg": "查询失败，" + err.Error(),
+		})
+		return
+	}
+
+	g, err := service.GetMyJoinedGroups(user.UserId)
 
 	if err != nil {
 		logrus.Errorf("[api.GetMyGroups] %+v", err)

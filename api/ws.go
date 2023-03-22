@@ -21,7 +21,7 @@ import (
 
 const (
 	//设置ws的超时时间
-	wsTimeout = 12 * time.Minute
+	wsTimeout = 5 * time.Minute
 )
 
 type WsConnContext struct {
@@ -110,7 +110,7 @@ func wsHandler(ctx *gin.Context) {
 	if preConn != nil {
 		preConn.Send("有别的设备登录了你的用户，你寄了", service.PackageType_PT_ERR)
 		service.DeleteConn(user.UserId)
-		logrus.Info("[wsHandler] Get another conn in same userid-%d, delete pre conn", user.UserId)
+		logrus.Info("[wsHandler] Get another conn in same userid-", user.UserId, ", delete pre conn")
 	}
 	service.SetConn(user.UserId, &conn)
 	defer service.DeleteConn(user.UserId) // 出现差错就从map里删除
